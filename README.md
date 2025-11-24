@@ -1,25 +1,38 @@
 # Superpowers
 
-A comprehensive skills library of proven techniques, patterns, and workflows for AI coding assistants.
+AI agents skip steps under time pressure. They bypass best practices when confident. They lack consistency across tasks. The result: bugs you didn't catch, designs you didn't validate, tests you didn't write.
 
-## What You Get
+**Superpowers fixes this.** Skills are mandatory instruction documents agents must follow. When a relevant skill exists, the agent checks for it, uses it, or fails the task.
 
-- **Testing Skills** - TDD, async testing, anti-patterns
-- **Debugging Skills** - Systematic debugging, root cause tracing, verification
-- **Collaboration Skills** - Brainstorming, planning, code review, parallel agents
-- **Development Skills** - Git worktrees, finishing branches, subagent workflows
-- **Meta Skills** - Creating, testing, and sharing skills
+## How It Works
 
-Plus:
-- **Slash Commands** - `/superpowers:brainstorm`, `/superpowers:write-plan`, `/superpowers:execute-plan`
-- **Automatic Integration** - Skills activate automatically when relevant
-- **Consistent Workflows** - Systematic approaches to common engineering tasks
+At session start, the agent learns which skills exist. Before any task, the agent checks: "Does a skill match this work?" If yes, the agent loads and follows that skill.
 
-## Learn More
+Skills are markdown files with proven workflows. The `test-driven-development` skill forces RED-GREEN-REFACTOR. No test-first? Delete the code and start over. The skill prevents rationalization.
 
-Read the introduction: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
+## The Workflow
+
+**When you ask to build a feature:**
+
+1. **brainstorming** - Activates before writing code. Refines rough ideas through questions, explores alternatives, presents design in sections for validation. Saves design document.
+
+2. **using-git-worktrees** - Activates after design approval. Creates isolated workspace on new branch, runs project setup, verifies clean test baseline.
+
+3. **writing-plans** - Activates with approved design. Breaks work into bite-sized tasks (2-5 minutes each). Every task has exact file paths, complete code, verification steps.
+
+4. **subagent-driven-development** or **executing-plans** - Activates with plan. Dispatches fresh subagent per task (same session, fast iteration) or executes in batches (parallel session, human checkpoints).
+
+5. **test-driven-development** - Activates during implementation. Enforces RED-GREEN-REFACTOR: write failing test, watch it fail, write minimal code, watch it pass, commit. Deletes code written before tests.
+
+6. **requesting-code-review** - Activates between tasks. Reviews against plan, reports issues by severity. Critical issues block progress.
+
+7. **finishing-a-development-branch** - Activates when tasks complete. Verifies tests, presents options (merge/PR/keep/discard), cleans up worktree.
+
+**The agent checks for relevant skills before any task.** Mandatory workflows, not suggestions.
 
 ## Installation
+
+**Note:** Installation differs by platform. Claude Code has a built-in plugin system. Codex and OpenCode require manual setup.
 
 ### Claude Code (via Plugin Marketplace)
 
@@ -50,37 +63,25 @@ Check that commands appear:
 # /superpowers:execute-plan - Execute plan in batches
 ```
 
-### Codex (Experimental)
+### Codex
 
-**Note:** Codex support is experimental and may require refinement based on user feedback.
+Tell Codex:
 
-Tell Codex to fetch https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md and follow the instructions.
-
-## Quick Start
-
-### Using Slash Commands
-
-**Brainstorm a design:**
 ```
-/superpowers:brainstorm
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.codex/INSTALL.md
 ```
 
-**Create an implementation plan:**
+**Detailed docs:** [docs/README.codex.md](docs/README.codex.md)
+
+### OpenCode
+
+Tell OpenCode:
+
 ```
-/superpowers:write-plan
+Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md
 ```
 
-**Execute the plan:**
-```
-/superpowers:execute-plan
-```
-
-### Automatic Skill Activation
-
-Skills activate automatically when relevant. For example:
-- `test-driven-development` activates when implementing features
-- `systematic-debugging` activates when debugging issues
-- `verification-before-completion` activates before claiming work is done
+**Detailed docs:** [docs/README.opencode.md](docs/README.opencode.md)
 
 ## What's Inside
 
@@ -114,28 +115,14 @@ Skills activate automatically when relevant. For example:
 - **testing-skills-with-subagents** - Validate skill quality
 - **using-superpowers** - Introduction to the skills system
 
-### Commands
-
-All commands are thin wrappers that activate the corresponding skill:
-
-- **brainstorm.md** - Activates the `brainstorming` skill
-- **write-plan.md** - Activates the `writing-plans` skill
-- **execute-plan.md** - Activates the `executing-plans` skill
-
-## How It Works
-
-1. **SessionStart Hook** - Loads the `using-superpowers` skill at session start
-2. **Skills System** - Uses Claude Code's first-party skills system
-3. **Automatic Discovery** - Claude finds and uses relevant skills for your task
-4. **Mandatory Workflows** - When a skill exists for your task, using it becomes required
-
 ## Philosophy
 
 - **Test-Driven Development** - Write tests first, always
 - **Systematic over ad-hoc** - Process over guessing
 - **Complexity reduction** - Simplicity as primary goal
 - **Evidence over claims** - Verify before declaring success
-- **Domain over implementation** - Work at problem level, not solution level
+
+Read more: [Superpowers for Claude Code](https://blog.fsck.com/2025/10/09/superpowers/)
 
 ## Contributing
 

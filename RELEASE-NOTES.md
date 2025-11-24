@@ -1,5 +1,35 @@
 # Superpowers Release Notes
 
+## v3.5.0 (2025-11-23)
+
+### Added
+
+- **OpenCode Support**: Native JavaScript plugin for OpenCode.ai
+  - Custom tools: `use_skill` and `find_skills`
+  - Message insertion pattern for skill persistence across context compaction
+  - Automatic context injection via chat.message hook
+  - Auto re-injection on session.compacted events
+  - Three-tier skill priority: project > personal > superpowers
+  - Project-local skills support (`.opencode/skills/`)
+  - Shared core module (`lib/skills-core.js`) for code reuse with Codex
+  - Automated test suite with proper isolation (`tests/opencode/`)
+  - Platform-specific documentation (`docs/README.opencode.md`, `docs/README.codex.md`)
+
+### Changed
+
+- **Refactored Codex Implementation**: Now uses shared `lib/skills-core.js` ES module
+  - Eliminates code duplication between Codex and OpenCode
+  - Single source of truth for skill discovery and parsing
+  - Codex successfully loads ES modules via Node.js interop
+
+- **Improved Documentation**: Rewrote README to explain problem/solution clearly
+  - Removed duplicate sections and conflicting information
+  - Added complete workflow description (brainstorm → plan → execute → finish)
+  - Simplified platform installation instructions
+  - Emphasized skill-checking protocol over automatic activation claims
+
+---
+
 ## v3.4.1 (2025-10-31)
 
 ### Improvements
