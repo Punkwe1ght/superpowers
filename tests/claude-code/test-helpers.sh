@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 # Helper functions for Claude Code skill tests
 
+# Use gtimeout on macOS (from coreutils), timeout on Linux
+if command -v gtimeout &>/dev/null; then
+    TIMEOUT_CMD="gtimeout"
+elif command -v timeout &>/dev/null; then
+    TIMEOUT_CMD="timeout"
+else
+    echo "ERROR: Neither 'timeout' nor 'gtimeout' found. Install coreutils: brew install coreutils" >&2
+    exit 1
+fi
+
 # Run Claude Code with a prompt and capture output
 # Usage: run_claude "prompt text" [timeout_seconds] [allowed_tools]
 run_claude() {
@@ -9,14 +19,24 @@ run_claude() {
     local allowed_tools="${3:-}"
     local output_file=$(mktemp)
 
-    # Build command
-    local cmd="claude -p \"$prompt\""
+    # Find claude in common locations since bash may not have user's shell PATH
+    local claude_cmd="claude"
+    for loc in "$HOME/.local/bin/claude" "/usr/local/bin/claude" "$(command -v claude 2>/dev/null)"; do
+        if [ -x "$loc" ]; then
+            claude_cmd="$loc"
+            break
+        fi
+    done
+
+    # Build args array
+    local -a args=(-p "$prompt" --verbose)
     if [ -n "$allowed_tools" ]; then
-        cmd="$cmd --allowed-tools=$allowed_tools"
+        args+=(--allowed-tools="$allowed_tools")
     fi
 
     # Run Claude in headless mode with timeout
-    if timeout "$timeout" bash -c "$cmd" > "$output_file" 2>&1; then
+    # Redirect stdin from /dev/null to prevent claude waiting for input
+    if $TIMEOUT_CMD "$timeout" "$claude_cmd" "${args[@]}" < /dev/null > "$output_file" 2>&1; then
         cat "$output_file"
         rm -f "$output_file"
         return 0
