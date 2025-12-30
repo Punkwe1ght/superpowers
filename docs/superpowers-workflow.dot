@@ -1,260 +1,120 @@
-digraph SUPERPOWERS_WORKFLOW {
+digraph SUPERPOWERS {
     rankdir=TB;
-    node [fontname="Helvetica", fontsize=10];
+    node [fontname="Helvetica", fontsize=11, style=filled, fillcolor=white];
     edge [fontname="Helvetica", fontsize=9];
     compound=true;
-    newrank=true;
-    splines=polyline;
-    nodesep=0.4;
-    ranksep=0.5;
+    nodesep=0.3;
+    ranksep=0.4;
 
-    // ===== ENTRY =====
-    subgraph cluster_entry {
-        label="1. Entry";
-        style=filled; fillcolor=white;
+    // ===== ENTRY & ROUTING =====
+    subgraph cluster_main {
+        label="Superpowers Workflow";
+        style=filled; fillcolor="#fafafa";
 
-        start [label="New task", shape=doublecircle];
-        skill_check [label="Skill applies?", shape=diamond];
-        invoke_skill [label="Invoke Skill tool", shape=box];
-    }
+        start [label="New task", shape=doublecircle, fillcolor="#e8f5e9"];
 
-    // ===== JANUS PARADIGM =====
-    subgraph cluster_janus_paradigm {
-        label="2. Janus Reasoning Paradigm";
-        style=filled; fillcolor="#fffde7";
+        subgraph cluster_routing {
+            label="Skill Routing";
+            style=filled; fillcolor=white;
 
-        two_lenses [label="Apply two lenses", shape=box];
-
-        subgraph cluster_lenses {
-            label="";
-            style=invis;
-            rank=same;
-            semantic [label="SEMANTIC\nThis reminds me of...\nPattern recognition", shape=box, fillcolor="#e3f2fd", style=filled];
-            symbolic [label="SYMBOLIC\nIf X then Y...\nLogical derivation", shape=box, fillcolor="#f3e5f5", style=filled];
+            route [label="What task?", shape=diamond];
+            tdd [label="TDD", shape=box, fillcolor="#c8e6c9"];
+            debug [label="Debugging", shape=box, fillcolor="#ffe0b2"];
+            interop [label="janus-interop", shape=box, fillcolor="#b2ebf2"];
+            other [label="Other skills", shape=box, fillcolor="#e1bee7"];
         }
 
-        lenses_agree [label="Lenses agree?", shape=diamond];
-        investigate [label="Investigate mismatch", shape=box];
-        proceed [label="Proceed with confidence", shape=box];
-    }
+        // ===== THE CORE LOOP =====
+        subgraph cluster_work {
+            label="Work Loop";
+            style=filled; fillcolor=white;
 
-    // ===== SKILL ROUTING =====
-    subgraph cluster_routing {
-        label="3. Skill Routing";
-        style=filled; fillcolor=white;
+            work [label="Do work", shape=box];
+            test [label="Test", shape=box];
+            result [label="Expected\nresult?", shape=diamond];
+            done [label="Done", shape=doublecircle, fillcolor="#c8e6c9"];
+        }
 
-        what_task [label="What kind of task?", shape=diamond];
+        // ===== CONFUSION =====
+        subgraph cluster_confusion {
+            label="";
+            style=invis;
 
-        route_tdd [label="test-driven-development", shape=box, fillcolor="#c8e6c9", style=filled];
-        route_debug [label="systematic-debugging", shape=box, fillcolor="#ffe0b2", style=filled];
-        route_interop [label="janus-interop", shape=box, fillcolor="#b2ebf2", style=filled];
-        route_brainstorm [label="brainstorming", shape=box, fillcolor="#e1bee7", style=filled];
-        route_verify [label="verification-before-completion", shape=box, fillcolor="#b2dfdb", style=filled];
-    }
+            confused [label="CONFUSED", shape=ellipse, fillcolor="#ffccbc"];
 
-    // ===== TDD WITH JANUS =====
-    subgraph cluster_tdd {
-        label="4. TDD Cycle";
-        style=filled; fillcolor="#e8f5e9";
+            triggers [label="Triggers:\n• Surprise result\n• Same error twice\n• 2nd failed fix", shape=note, fillcolor="#fff9c4"];
+        }
 
-        tdd_start [label="Begin TDD", shape=doublecircle];
-        write_test [label="Write failing test", shape=box];
-        run_test_red [label="npm test", shape=plaintext];
-        fails_expected [label="Expected failure?", shape=diamond];
-        write_code [label="Write minimal code", shape=box];
-        run_test_green [label="npm test", shape=plaintext];
-        passes [label="Test passes?", shape=diamond];
-        commit [label="git commit", shape=plaintext];
-        more_tests [label="More tests?", shape=diamond];
-        tdd_done [label="TDD complete", shape=doublecircle];
+        // ===== JANUS REASONING =====
+        subgraph cluster_janus {
+            label="janus-reasoning";
+            style=filled; fillcolor="#fff3e0";
 
-        // Confusion triggers
-        confused_tdd [label="CONFUSED", shape=ellipse, fillcolor="#ffccbc", style=filled];
-    }
+            janus_start [label="STOP\nguessing", shape=octagon, fillcolor="#ff8a65", fontcolor=white];
 
-    // ===== JANUS REASONING PROTOCOL =====
-    subgraph cluster_janus_reasoning {
-        label="5. janus-reasoning Protocol";
-        style=filled; fillcolor="#fff3e0";
+            prompts [label="Complete ALL prompts:\n─────────────────\n1. Expected vs Observed\n2. Semantic: reminds me of...\n3. Symbolic: if X then Y...\n4. Compare: agree/conflict?\n5. ONE hypothesis (cite source)\n6. Track paradigms tried", shape=box, fillcolor="#ffe0b2"];
 
-        janus_entry [label="Enter janus-reasoning", shape=doublecircle];
+            quality [label="Derived?", shape=diamond];
 
-        prompt1 [label="1. Expectation vs Reality\nI expected: ___\nI observed: ___", shape=box];
-        prompt2 [label="2. Semantic\nThis reminds me of: ___\nSimilar problem: ___", shape=box];
-        prompt3 [label="3. Symbolic\nWhat must be true: ___\nIf ___ then ___\nGiven ___, ___ is impossible", shape=box];
-        prompt4 [label="4. Compare\nSemantic suggests: ___\nSymbolic derives: ___\nAgree/conflict: ___", shape=box];
-        prompt5 [label="5. ONE Hypothesis\nBased on [source], I test: ___\nIf correct: ___\nIf wrong: ___", shape=box];
-        prompt6 [label="6. Track\nParadigms tried: ___", shape=box];
+            guess [label="GUESSED\n(no evidence)", shape=octagon, fillcolor=red, fontcolor=white];
+            derived [label="DERIVED\n(cites prompt 2/3/4)", shape=box, fillcolor="#c8e6c9"];
 
-        hypothesis_quality [label="Hypothesis derived?", shape=diamond];
-        not_derived [label="GUESSED\nReturn to prompt 3", shape=octagon, fillcolor=red, fontcolor=white, style=filled];
-        derived [label="DERIVED\nCites evidence", shape=box, fillcolor="#c8e6c9", style=filled];
+            one_change [label="ONE change", shape=box, fillcolor="#a5d6a7"];
+        }
 
-        janus_exit [label="Exit: ONE change", shape=doublecircle];
-    }
-
-    // ===== DEBUGGING WITH JANUS =====
-    subgraph cluster_debug {
-        label="6. Debugging";
-        style=filled; fillcolor="#fff8e1";
-
-        debug_start [label="Error encountered", shape=ellipse];
-        read_error [label="Read error completely", shape=box];
-        reproduce [label="Reproducible?", shape=diamond];
-        check_changes [label="Check recent changes", shape=box];
-        git_diff [label="git diff HEAD~1", shape=plaintext];
-        to_janus [label="Enter janus-reasoning", shape=box, fillcolor="#fff3e0", style=filled];
-        apply_fix [label="Apply ONE minimal fix", shape=box];
-        test_fix [label="npm test", shape=plaintext];
-        resolved [label="Resolved?", shape=diamond];
-        same_error [label="Same error?", shape=diamond];
-        debug_done [label="Bug fixed", shape=doublecircle];
-    }
-
-    // ===== JANUS INTEROP =====
-    subgraph cluster_interop {
-        label="7. janus-interop Safety";
-        style=filled; fillcolor="#e0f7fa";
-
-        interop_start [label="Writing Prolog/Python", shape=ellipse];
-
-        check_queries [label="Close active queries", shape=box];
-        check_objects [label="Plan object lifecycle", shape=box];
-        check_params [label="Parameterize inputs", shape=box];
-        check_exceptions [label="Add exception handling", shape=box];
-        check_heartbeat [label="Add heartbeat()", shape=box];
-
-        write_interop [label="Write interop code", shape=box];
-
-        verify_queries [label="All queries closed?", shape=diamond];
-        verify_handled [label="All py_call handled?", shape=diamond];
-        verify_params [label="All inputs parameterized?", shape=diamond];
-
-        violation [label="VIOLATION\nFix before proceeding", shape=octagon, fillcolor=red, fontcolor=white, style=filled];
-        interop_done [label="Safe interop code", shape=doublecircle];
-    }
-
-    // ===== SELF-CHECK =====
-    subgraph cluster_selfcheck {
-        label="8. Self-Check";
-        style=filled; fillcolor="#ffebee";
-
-        semantic_only [label="Semantic-only mode?", shape=diamond];
-        signs [label="Signs:\n- Trying variations\n- No constraints stated\n- Multiple changes\n- 'Maybe' without evidence", shape=box];
-        stop_guessing [label="STOP\nEnter janus-reasoning", shape=octagon, fillcolor=red, fontcolor=white, style=filled];
-    }
-
-    // ===== NEVER RULES =====
-    subgraph cluster_never {
-        label="NEVER";
-        style=filled; fillcolor="#ffcdd2";
-
-        rank=same;
-        never_guess [label="Guess without\nderivation", shape=octagon, fillcolor=red, fontcolor=white, style=filled];
-        never_multi [label="Multiple changes\nper attempt", shape=octagon, fillcolor=red, fontcolor=white, style=filled];
-        never_skip [label="Skip symbolic\nreasoning", shape=octagon, fillcolor=red, fontcolor=white, style=filled];
+        // ===== SELF-CHECK =====
+        selfcheck [label="Self-check:\n• Trying variations?\n• No constraints stated?\n• 'Maybe' without evidence?\n→ Enter janus-reasoning", shape=note, fillcolor="#ffcdd2"];
     }
 
     // ===== EDGES =====
 
-    // Entry flow
-    start -> skill_check;
-    skill_check -> invoke_skill [label="yes"];
-    skill_check -> two_lenses [label="no skill"];
-    invoke_skill -> two_lenses;
+    // Entry
+    start -> route;
 
-    // Janus paradigm flow
-    two_lenses -> semantic;
-    two_lenses -> symbolic;
-    semantic -> lenses_agree;
-    symbolic -> lenses_agree;
-    lenses_agree -> proceed [label="yes"];
-    lenses_agree -> investigate [label="no"];
-    investigate -> lenses_agree;
-    proceed -> what_task;
+    // Routing
+    route -> tdd [label="implement"];
+    route -> debug [label="bug"];
+    route -> interop [label="Prolog/Python"];
+    route -> other [label="design/etc"];
 
-    // Skill routing
-    what_task -> route_tdd [label="implement"];
-    what_task -> route_debug [label="bug/error"];
-    what_task -> route_interop [label="Prolog/Python"];
-    what_task -> route_brainstorm [label="design"];
-    what_task -> route_verify [label="done"];
+    // All skills lead to work
+    tdd -> work;
+    debug -> work;
+    interop -> work;
+    other -> work;
 
-    // TDD flow
-    route_tdd -> tdd_start;
-    tdd_start -> write_test;
-    write_test -> run_test_red;
-    run_test_red -> fails_expected;
-    fails_expected -> write_code [label="yes"];
-    fails_expected -> confused_tdd [label="no (surprise)"];
-    write_code -> run_test_green;
-    run_test_green -> passes;
-    passes -> commit [label="yes"];
-    passes -> confused_tdd [label="no (2nd time)"];
-    commit -> more_tests;
-    more_tests -> write_test [label="yes"];
-    more_tests -> tdd_done [label="no"];
+    // Work loop
+    work -> test;
+    test -> result;
+    result -> done [label="yes"];
+    result -> confused [label="no"];
 
-    // TDD confusion -> janus-reasoning
-    confused_tdd -> janus_entry [style=bold, color=red];
+    // Confusion triggers janus
+    confused -> triggers [style=dotted, arrowhead=none];
+    confused -> janus_start [style=bold, color="#d32f2f"];
 
-    // janus-reasoning flow
-    janus_entry -> prompt1;
-    prompt1 -> prompt2;
-    prompt2 -> prompt3;
-    prompt3 -> prompt4;
-    prompt4 -> prompt5;
-    prompt5 -> prompt6;
-    prompt6 -> hypothesis_quality;
-    hypothesis_quality -> not_derived [label="guessed"];
-    hypothesis_quality -> derived [label="cited evidence"];
-    not_derived -> prompt3;
-    derived -> janus_exit;
+    // Janus protocol
+    janus_start -> prompts;
+    prompts -> quality;
+    quality -> guess [label="no evidence"];
+    quality -> derived [label="cites source"];
+    guess -> prompts [label="redo prompt 3"];
+    derived -> one_change;
 
-    // janus-reasoning returns to TDD
-    janus_exit -> write_code [style=dashed, label="one change"];
+    // Return to work
+    one_change -> test [style=dashed, label="retry"];
 
-    // Debugging flow
-    route_debug -> debug_start;
-    debug_start -> read_error;
-    read_error -> reproduce;
-    reproduce -> check_changes [label="yes"];
-    reproduce -> read_error [label="no (gather more)"];
-    check_changes -> git_diff;
-    git_diff -> to_janus;
-    to_janus -> janus_entry [style=bold, color=orange];
-    janus_exit -> apply_fix [style=dashed, label="hypothesis"];
-    apply_fix -> test_fix;
-    test_fix -> resolved;
-    resolved -> debug_done [label="yes"];
-    resolved -> same_error [label="no"];
-    same_error -> janus_entry [label="yes", style=bold, color=red];
-    same_error -> to_janus [label="no (new error)"];
+    // Self-check floats as reminder
+    selfcheck -> janus_start [style=dotted, color="#d32f2f"];
 
-    // Interop flow
-    route_interop -> interop_start;
-    interop_start -> check_queries;
-    check_queries -> check_objects;
-    check_objects -> check_params;
-    check_params -> check_exceptions;
-    check_exceptions -> check_heartbeat;
-    check_heartbeat -> write_interop;
-    write_interop -> verify_queries;
-    verify_queries -> verify_handled [label="ok"];
-    verify_queries -> violation [label="violation"];
-    verify_handled -> verify_params [label="ok"];
-    verify_handled -> violation [label="violation"];
-    verify_params -> interop_done [label="ok"];
-    verify_params -> violation [label="violation"];
-    violation -> check_queries [label="fix"];
+    // ===== NEVER (inline) =====
+    subgraph cluster_never {
+        label="NEVER";
+        style=filled; fillcolor="#ffcdd2";
+        rank=same;
 
-    // Self-check connections
-    semantic_only -> signs [label="yes"];
-    signs -> stop_guessing;
-    stop_guessing -> janus_entry [style=bold, color=red];
-
-    // Completion
-    tdd_done -> route_verify;
-    debug_done -> route_verify;
-    interop_done -> route_verify;
+        n1 [label="Guess without\nderivation", shape=octagon, fillcolor=red, fontcolor=white];
+        n2 [label="Multiple changes\nat once", shape=octagon, fillcolor=red, fontcolor=white];
+        n3 [label="Skip symbolic\nreasoning", shape=octagon, fillcolor=red, fontcolor=white];
+    }
 }
