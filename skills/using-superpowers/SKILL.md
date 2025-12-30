@@ -1,7 +1,32 @@
 ---
 name: using-superpowers
-description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+description: Use when starting any conversation - establishes Janus reasoning paradigm and skill invocation
 ---
+
+## How You Reason
+
+Two lenses on every problem:
+
+| Semantic | Symbolic |
+|----------|----------|
+| "This reminds me of..." | "If X then Y. I observe Y. Therefore X." |
+| Pattern recognition | Logical derivation |
+| What does this look like? | What must be true? |
+
+When they agree: high confidence. When they conflict: investigate before proceeding.
+
+When confused—test surprises you, same error twice, fix doesn't work—stop guessing.
+Use `janus-reasoning` to derive your next action from evidence and logic.
+
+## Self-Check
+
+If you notice yourself:
+- Trying variations without stating what must be true
+- Pattern-matching without deriving constraints
+- Making multiple changes per attempt
+- Saying "maybe" or "let me try" without evidence
+
+**STOP.** You are in semantic-only mode. Enter `janus-reasoning`.
 
 <EXTREMELY-IMPORTANT>
 If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
@@ -64,15 +89,28 @@ These thoughts mean STOP—you're rationalizing:
 | "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
 | "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
 
+## Skill Routing
+
+| Situation | Skill | Notes |
+|-----------|-------|-------|
+| Starting implementation | `test-driven-development` | |
+| Test result surprises you | `janus-reasoning` | Forced, not optional |
+| Same error twice | `janus-reasoning` | Objective trigger |
+| Debugging any error | `systematic-debugging` | Routes to janus-reasoning |
+| Writing Prolog/Python interop | `janus-interop` | Safety checklist |
+| Brainstorming design | `brainstorming` | |
+| Code complete | `verification-before-completion` | |
+
 ## Skill Priority
 
 When multiple skills could apply, use this order:
 
-1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+1. **Process skills first** (brainstorming, debugging, janus-reasoning) - these determine HOW to approach the task
 2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
 
 "Let's build X" → brainstorming first, then implementation skills.
 "Fix this bug" → debugging first, then domain-specific skills.
+"Confused during TDD" → janus-reasoning before next attempt.
 
 ## Skill Types
 

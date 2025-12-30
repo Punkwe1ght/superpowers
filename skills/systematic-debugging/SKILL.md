@@ -144,24 +144,44 @@ You MUST complete each phase before proceeding to the next.
 
 ### Phase 3: Hypothesis and Testing
 
-**Scientific method:**
+**Use `janus-reasoning` to derive hypotheses, not guess them.**
 
-1. **Form Single Hypothesis**
-   - State clearly: "I think X is the root cause because Y"
-   - Write it down
-   - Be specific, not vague
+1. **Enter janus-reasoning (mandatory)**
+   - Complete ALL five prompts
+   - Write answers, don't just think them
+   - Hypothesis must cite evidence from prompts 2, 3, or 4
 
-2. **Test Minimally**
+2. **Hypothesis Quality Gate**
+
+   **DERIVED (acceptable):**
+   ```
+   "Based on symbolic derivation: the lock must be held during read.
+    I see stale data. Therefore lock is not held.
+    I will add lock acquisition before read."
+   ```
+
+   **GUESSED (not acceptable):**
+   ```
+   "Maybe it's a race condition. I'll add a lock."
+   ```
+
+   The difference: derived hypotheses cite evidence. Guesses do not.
+
+3. **Test Minimally**
    - Make the SMALLEST possible change to test hypothesis
-   - One variable at a time
+   - ONE variable at a time
    - Don't fix multiple things at once
 
-3. **Verify Before Continuing**
+4. **Verify Before Continuing**
    - Did it work? Yes → Phase 4
-   - Didn't work? Form NEW hypothesis
+   - Didn't work? Return to janus-reasoning
    - DON'T add more fixes on top
 
-4. **When You Don't Know**
+5. **Objective Triggers**
+   - Same error message twice in a row → return to janus-reasoning
+   - Output matches neither prediction → return to janus-reasoning
+
+6. **When You Don't Know**
    - Say "I don't understand X"
    - Don't pretend to know
    - Ask for help
@@ -284,6 +304,7 @@ These techniques are part of systematic debugging and available in this director
 - **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
 
 **Related skills:**
+- **superpowers:janus-reasoning** - For deriving hypotheses in Phase 3 (mandatory)
 - **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
 - **superpowers:verification-before-completion** - Verify fix worked before claiming success
 

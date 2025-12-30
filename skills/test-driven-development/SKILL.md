@@ -354,6 +354,40 @@ Bug found? Write failing test reproducing it. Follow TDD cycle. Test proves fix 
 
 Never fix bugs without a test.
 
+## When the Test Surprises You
+
+STOP. Do not guess. Do not "try something quick."
+
+Enter `janus-reasoning` and complete all five prompts.
+
+**Confusion triggers (any one forces janus-reasoning):**
+
+| Trigger | Type |
+|---------|------|
+| Test fails when expected to pass | Self-assessed |
+| Test passes when expected to fail | Self-assessed |
+| Same error message twice in a row | Objective |
+| Output matches neither prediction nor its negation | Objective |
+
+**The rule:** You may not write code until your hypothesis:
+- Cites evidence from semantic analysis, symbolic derivation, or their conflict
+- Has testable predictions for both success and failure cases
+
+**Flow when confused:**
+
+```
+Test result surprises you
+        ↓
+    STOP guessing
+        ↓
+  janus-reasoning
+  (complete all 5 prompts)
+        ↓
+  ONE cited hypothesis
+        ↓
+  ONE code change → test → repeat if needed
+```
+
 ## Testing Anti-Patterns
 
 When adding mocks or test utilities, read @testing-anti-patterns.md to avoid common pitfalls:
