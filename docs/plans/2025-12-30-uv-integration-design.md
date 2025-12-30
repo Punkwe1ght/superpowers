@@ -1,12 +1,14 @@
 # uv Integration Design
 
 **Date:** 2025-12-30
-**Status:** Approved
+**Status:** Approved (Revised)
 **Scope:** Mandatory uv usage for all Python work, both internal and user-facing
 
 ## Overview
 
-Integrate `uv` as the required Python development tool throughout superpowers. This replaces all pip/poetry references with uv commands and establishes uv as the standard for dependency management, virtual environments, tool running, and Python version management.
+Integrate `uv` as the required Python development tool throughout superpowers. This replaces all pip/poetry references with uv commands inline in existing skills and adds a quick reference to CLAUDE.md.
+
+**Design principle:** No separate skill. uv is a tool preference, not a workflow. Put the commands where they're used.
 
 ## Requirements
 
@@ -17,25 +19,28 @@ Integrate `uv` as the required Python development tool throughout superpowers. T
 
 ## Design
 
-### 1. New Skill: `using-uv`
+### 1. CLAUDE.md: uv Quick Reference
 
-**Location:** `skills/using-uv/SKILL.md`
+Add a "Python Development" section with essential commands:
 
-**Frontmatter:**
-```yaml
----
-name: using-uv
-description: Use when working with Python projects - covers dependency management, virtual environments, tool running, and Python versions
----
+```markdown
+## Python Development
+
+`uv` is required for all Python work. No pip/poetry fallback.
+
+**Install:** `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+| Task | Command |
+|------|---------|
+| New project | `uv init` |
+| Add dependency | `uv add <package>` |
+| Sync deps (pyproject.toml) | `uv sync` |
+| Install deps (requirements.txt) | `uv pip install -r requirements.txt` |
+| Run script | `uv run script.py` |
+| Run tool without install | `uvx ruff check .` |
+| Install Python version | `uv python install 3.12` |
+| Pin Python version | `uv python pin 3.12` |
 ```
-
-**Content sections:**
-1. **Why uv** - Brief rationale (speed, single tool, replaces pip/poetry/pyenv/pipx)
-2. **New projects** - `uv init`, `uv add <dep>`, `uv sync`, `uv run <script>`
-3. **Legacy projects** - `uv venv`, `uv pip install -r requirements.txt`
-4. **Tool running** - `uvx ruff check .`, `uvx pytest` (no install needed)
-5. **Python versions** - `uv python install 3.12`, `uv python pin 3.12`
-6. **Quick reference table** - Common commands at a glance
 
 ### 2. Skill Updates
 
@@ -55,7 +60,7 @@ if [ -f requirements.txt ] && [ ! -f pyproject.toml ]; then uv pip install -r re
 ```
 
 - pyproject.toml takes precedence if both exist
-- Add note: "Python projects require uv. See `superpowers:using-uv` for setup."
+- Remove all pip/poetry references
 
 #### `test-driven-development`
 
@@ -67,20 +72,9 @@ if [ -f requirements.txt ] && [ ! -f pyproject.toml ]; then uv pip install -r re
 
 #### `finishing-a-development-branch`
 
-- Add uv-specific Python test pattern
+- Add uv-specific Python test pattern (`uv run pytest`)
 
-### 3. Documentation Updates
-
-#### CLAUDE.md
-
-Add "Development Requirements" section:
-```markdown
-## Development Requirements
-
-- **Python:** `uv` is required for all Python work. No pip/poetry fallback.
-  - Install: `curl -LsSf https://astral.sh/uv/install.sh | sh`
-  - See `superpowers:using-uv` skill for patterns
-```
+### 3. Internal Tooling Updates
 
 #### docs/testing.md
 
@@ -115,11 +109,10 @@ Add header comment:
 
 ## Implementation Tasks
 
-1. Create `skills/using-uv/SKILL.md`
+1. Update `CLAUDE.md` - add Python Development section with uv quick reference
 2. Update `skills/using-git-worktrees/SKILL.md` - Python detection logic
 3. Update `skills/test-driven-development/SKILL.md` - pytest examples
 4. Update `skills/writing-plans/SKILL.md` - task examples
 5. Update `skills/finishing-a-development-branch/SKILL.md` - test patterns
-6. Update `CLAUDE.md` - add Development Requirements section
-7. Update `docs/testing.md` - Python script invocation
-8. Update `tests/claude-code/analyze-token-usage.py` - add header comment
+6. Update `docs/testing.md` - Python script invocation
+7. Update `tests/claude-code/analyze-token-usage.py` - add header comment
