@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Run with: uv run analyze-token-usage.py <session.jsonl>
 """
 Analyze token usage from Claude Code session transcripts.
 Breaks down usage by main session and individual subagents.

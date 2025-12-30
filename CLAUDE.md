@@ -71,7 +71,7 @@ cd tests/claude-code && ./run-skill-tests.sh
 
 ```bash
 # Analyze token usage from any session
-python3 tests/claude-code/analyze-token-usage.py ~/.claude/projects/<project>/<session>.jsonl
+uv run tests/claude-code/analyze-token-usage.py ~/.claude/projects/<project>/<session>.jsonl
 ```
 
 ### Local Plugin Development
@@ -115,6 +115,23 @@ Follow `skills/writing-skills/SKILL.md` for the complete guide. Key points:
 - **Flexible skills** (brainstorming): Adapt principles to context
 
 The system enforces: test before code, process over guessing, evidence over claims.
+
+## Python Development
+
+`uv` is required for all Python work. No pip/poetry fallback.
+
+**Install:** `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+| Task | Command |
+|------|---------|
+| New project | `uv init` |
+| Add dependency | `uv add <package>` |
+| Sync deps (pyproject.toml) | `uv sync` |
+| Install deps (requirements.txt) | `uv pip install -r requirements.txt` |
+| Run script | `uv run script.py` |
+| Run tool without install | `uvx ruff check .` |
+| Install Python version | `uv python install 3.12` |
+| Pin Python version | `uv python pin 3.12` |
 
 ## Git Workflow
 

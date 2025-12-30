@@ -141,7 +141,7 @@ STATUS: PASSED
 Analyze token usage from any Claude Code session:
 
 ```bash
-python3 tests/claude-code/analyze-token-usage.py ~/.claude/projects/<project-dir>/<session-id>.jsonl
+uv run tests/claude-code/analyze-token-usage.py ~/.claude/projects/<project-dir>/<session-id>.jsonl
 ```
 
 ### Finding Session Files
@@ -250,7 +250,7 @@ if grep -q '"name":"Skill".*"skill":"your-skill-name"' "$SESSION_FILE"; then
 fi
 
 # Show token analysis
-python3 "$SCRIPT_DIR/analyze-token-usage.py" "$SESSION_FILE"
+uv run "$SCRIPT_DIR/analyze-token-usage.py" "$SESSION_FILE"
 ```
 
 ### Best Practices
