@@ -67,6 +67,8 @@ I have specific limitations during RE:
 :- dynamic hypothesis/3.
 :- dynamic known_pattern/2.
 :- dynamic vuln_hypothesis/3.
+:- dynamic requires_type/3.
+:- dynamic actual_type/3.
 
 % Function basics
 %   function(Addr, Name, Signature)
@@ -82,6 +84,10 @@ I have specific limitations during RE:
 %   hypothesis(Func, Purpose, Confidence)
 %   known_pattern(Func, PatternName)
 %   vuln_hypothesis(Func, VulnType, Reason)
+
+% Type constraints (for type_mismatch detection)
+%   requires_type(Purpose, ArgName, ExpectedType)  % e.g., requires_type(aes_encrypt, key, ptr(uint8))
+%   actual_type(Func, ArgName, ObservedType)       % e.g., actual_type(0x401000, key, ptr(uint8))
 ```
 
 ### Constraint Rules
