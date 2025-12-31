@@ -1,3 +1,6 @@
 .worktrees/
 .private-journal/
 .claude/
+
+# Reference PDFs (not part of repo)
+/*.pdf
