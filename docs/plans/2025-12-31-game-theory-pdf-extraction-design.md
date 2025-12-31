@@ -73,10 +73,30 @@ game-theory-extractor/
 ## Extraction Script
 
 ```python
+import json
+import os
 import time
 from anthropic import APIError, RateLimitError
 
-def process_pdf(pdf_path: str, start_page: int = 1):
+STATE_FILE = "state.json"
+
+def load_state():
+    """Load last successful page from state file. Returns 1 if no state."""
+    if os.path.exists(STATE_FILE):
+        with open(STATE_FILE) as f:
+            return json.load(f).get("current_page", 1)
+    return 1
+
+def save_state(page_num: int):
+    """Persist current page for crash recovery."""
+    with open(STATE_FILE, "w") as f:
+        json.dump({"current_page": page_num}, f)
+
+def process_pdf(pdf_path: str, start_page: int = None):
+    if start_page is None:
+        start_page = load_state()
+        if start_page > 1:
+            print(f"Resuming from page {start_page}")
     reader = PdfReader(pdf_path)
     max_retries = 3
 
@@ -135,6 +155,9 @@ Rules:
 - If the page has no extractable concepts, output: % No concepts on this page
 - For strings containing double quotes, double them: "He said ""hello"""
 - Each fact on its own line
+- For formulas: preserve mathematical structure even if symbols appear garbled
+- Mark uncertain or complex formulas with: % FORMULA_CHECK_NEEDED
+- Use ASCII approximations for symbols: >= for ≥, sum() for Σ, E[] for expected value
 
 Output facts only, no explanation."""
 ```
@@ -164,9 +187,12 @@ verify_knowledge_base :-
 
 %% undefined_concept(-C) is nondet
 %% C appears in relates/3 but lacks a concept/3 definition.
+%% Uses distinct/2 to avoid duplicate results when C appears in both positions.
 undefined_concept(C) :-
-    ( relates(C, _, _) ; relates(_, C, _) ),
-    \+ concept(C, _, _).
+    distinct(C, (
+        ( relates(C, _, _) ; relates(_, C, _) ),
+        \+ concept(C, _, _)
+    )).
 
 %% orphan_concept(-C) is nondet
 %% C has a definition but no relations. May be valid for foundational concepts.
@@ -201,15 +227,24 @@ Before running verification queries in Phase 2:
 
 Example safe query pattern:
 ```python
-from janus_swi import Query
+from janus_swi import Query, consult, PrologError
+import janus_swi as janus
 
 def run_verification():
-    consult("output/knowledge.pl")
-    consult("verify.pl")
+    try:
+        consult("output/knowledge.pl")
+        consult("verify.pl")
+    except PrologError as e:
+        print(f"Failed to load knowledge base: {e}")
+        raise
 
-    with Query("verify_knowledge_base") as q:
-        for _ in q:
-            pass  # Side effects print results
+    try:
+        with Query("verify_knowledge_base") as q:
+            for _ in q:
+                janus.heartbeat()  # Prevent timeout on large knowledge bases
+    except PrologError as e:
+        print(f"Verification query failed: {e}")
+        raise
 ```
 
 ## Workflow
