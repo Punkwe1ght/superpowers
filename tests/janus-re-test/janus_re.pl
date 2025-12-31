@@ -6,6 +6,14 @@
 %% missing_input(+Func, -Required) is nondet - enumerate missing inputs
 %% has_input(+Func, +Input) is semidet - check if function has required input
 %% incompatible(?A, ?B) is semidet - check if two hypotheses conflict
+%% crypto_purpose(?Purpose) is nondet - enumerate crypto purposes requiring keys
+%% is_hash_purpose(?Purpose) is nondet - enumerate hash function purposes
+%% has_hash_call(+Func) is semidet - check if function calls a hash routine
+%% is_hash_function(?Name) is nondet - enumerate known hash function names
+%% vuln_reachable(+Func) is semidet - check if vuln is reachable from user input
+%% vuln_contradicted(+Func, -Reason) is nondet - enumerate vuln contradictions
+%% mitigation_present(+Func, -Mitigation) is nondet - enumerate mitigations
+%% clear_facts is det - retract all dynamic facts
 
 :- dynamic function/3.
 :- dynamic calls/3.
@@ -106,6 +114,7 @@ contradiction(Func, conflicting_hypotheses(H1, H2)) :-
 contradiction(Func, missing_hash_call) :-
     hypothesis(Func, Purpose, _),
     is_hash_purpose(Purpose),
+    ground(Func),  % Guard: ensure grounded before NAF
     \+ has_hash_call(Func).
 
 is_hash_purpose(hash_md4).

@@ -69,7 +69,7 @@ digraph language_selection {
     "Need ML/data?" -> "Use Python" [label="yes"];
     "Need ML/data?" -> "Use Hybrid" [label="no"];
 
-    "New code?" -> "Use Hybrid" [label="no\n(both needed)"];
+    "New code?" -> "Use Hybrid" [label="no, extending\nboth .pl and .py"];
 }
 ```
 

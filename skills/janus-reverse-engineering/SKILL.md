@@ -88,7 +88,7 @@ Structural roles satisfy semantic requirements through Prolog rules:
 | `buffer` | any | `buffer` |
 | `struct_access` | `network_io` | `socket` |
 | `struct_access` | crypto purposes | `key` |
-| 2+ `unknown` params | hash purposes | `input`, `output` |
+| 2+ `unknown` params | hash purposes | `input` AND `output` (both) |
 
 This allows validation even with Ghidra's generic naming.
 
@@ -220,9 +220,10 @@ contradiction(Func, conflicting_hypotheses(H1, H2)) :-
     H1 @< H2,  % Canonical ordering to avoid duplicate pairs
     incompatible(H1, H2).
 
-% Symmetric incompatibility check (deterministic with once/1)
-incompatible(A, B) :-
-    once(( incompatible_(A, B) ; incompatible_(B, A) )).
+%% Symmetric incompatibility check (declarative symmetry)
+%% incompatible(?A, ?B) is semidet
+incompatible(A, B) :- incompatible_(A, B).
+incompatible(A, B) :- incompatible_(B, A), A @< B.  % Avoid duplicates
 
 incompatible_(encrypt, decrypt).
 incompatible_(malloc, free).
