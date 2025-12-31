@@ -103,6 +103,15 @@ vuln_contradicted(Func, size_validated) :-
 mitigation_present(Func, stack_canary) :-
     calls(Func, '__stack_chk_fail', _).
 
+%% Python-friendly query wrappers (return strings, not compound terms)
+contradiction_str(Func, CStr) :-
+    contradiction(Func, C),
+    term_string(C, CStr).
+
+mitigation_str(Func, MStr) :-
+    mitigation_present(Func, M),
+    term_string(M, MStr).
+
 %% Clear all dynamic facts
 clear_facts :-
     retractall(function(_, _, _)),
