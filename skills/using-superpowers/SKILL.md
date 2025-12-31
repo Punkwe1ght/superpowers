@@ -98,6 +98,7 @@ These thoughts mean STOP—you're rationalizing:
 | Same error twice | `janus-reasoning` | Objective trigger |
 | Debugging any error | `systematic-debugging` | Routes to janus-reasoning |
 | Writing Prolog/Python interop | `janus-interop` | Safety checklist |
+| Analyzing binaries/decompiled code | `janus-reverse-engineering` | Prolog checks claims |
 | Brainstorming design | `brainstorming` | |
 | Code complete | `verification-before-completion` | |
 
