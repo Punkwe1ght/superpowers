@@ -15,16 +15,6 @@
         "name": "Jesse Vincent",
         "email": "jesse@fsck.com"
       }
-    },
-    {
-      "name": "double-shot-latte",
-      "description": "Automatically evaluates whether Claude should continue working instead of stopping prematurely using Claude-judged decision making",
-      "version": "1.1.2",
-      "source": "https://github.com/Punkwe1ght/double-shot-latte.git",
-      "author": {
-        "name": "Jesse",
-        "url": "https://github.com/Punkwe1ght"
-      }
     }
   ]
 }
