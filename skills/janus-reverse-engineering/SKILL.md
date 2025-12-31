@@ -214,9 +214,9 @@ contradiction(Func, conflicting_hypotheses(H1, H2)) :-
     H1 @< H2,  % Canonical ordering to avoid duplicate pairs
     incompatible(H1, H2).
 
-% Symmetric incompatibility check (single clause with disjunction)
+% Symmetric incompatibility check (deterministic with once/1)
 incompatible(A, B) :-
-    ( incompatible_(A, B) ; incompatible_(B, A) ).
+    once(( incompatible_(A, B) ; incompatible_(B, A) )).
 
 incompatible_(encrypt, decrypt).
 incompatible_(malloc, free).
@@ -418,3 +418,11 @@ WHEN contradiction found:
   → If unresolvable → janus-reasoning protocol
   → If still stuck → downgrade confidence, state uncertainty
 ```
+
+## Handoffs
+
+| Condition | Next | Entry Point |
+|-----------|------|-------------|
+| About to write Prolog query | `janus-interop` | Pre-Execution Checklist |
+| Unresolvable contradiction | `janus-reasoning` | Protocol prompt 1 |
+| Claim validated | User | Present findings |

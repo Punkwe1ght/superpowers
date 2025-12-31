@@ -29,40 +29,27 @@ When confused, stop guessing. Derive your next action from evidence and logic.
 
 Complete ALL prompts before your next attempt. Write the answers, don't just think them.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ STOP. Complete these before continuing:                │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│ 1. EXPECTATION vs REALITY                               │
-│    "I expected: ___"                                    │
-│    "I observed: ___"                                    │
-│                                                         │
-│ 2. SEMANTIC (patterns)                                  │
-│    "This reminds me of: ___"                            │
-│    "Similar problem I've seen: ___"                     │
-│                                                         │
-│ 3. SYMBOLIC (logic + constraints)                       │
-│    "What must be true: ___"                             │
-│    "If ___ then ___. I observed ___. Therefore ___."    │
-│    "Given ___, ___ is impossible because ___."          │
-│                                                         │
-│ 4. COMPARE                                              │
-│    "Semantic suggests: ___"                             │
-│    "Symbolic derives: ___"                              │
-│    "They [agree/conflict] because: ___"                 │
-│    "Both could be wrong if: ___"                        │
-│                                                         │
-│ 5. ONE HYPOTHESIS                                       │
-│    "Based on [semantic/symbolic/conflict], I will       │
-│     test: ___"                                          │
-│    "If correct: ___"                                    │
-│    "If wrong: ___"                                      │
-│                                                         │
-│ 6. TRACK                                                │
-│    "Paradigms tried so far: ___"                        │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+```dot
+digraph janus_protocol {
+    rankdir=TB;
+    node [shape=box, style=rounded];
+
+    subgraph cluster_protocol {
+        label="STOP. Complete these before continuing:";
+        style=rounded;
+        color=black;
+
+        p1 [label="1. EXPECTATION vs REALITY\n\"I expected: ___\"\n\"I observed: ___\""];
+        p2 [label="2. SEMANTIC (patterns)\n\"This reminds me of: ___\"\n\"Similar problem I've seen: ___\""];
+        p3 [label="3. SYMBOLIC (logic + constraints)\n\"What must be true: ___\"\n\"If ___ then ___. I observed ___. Therefore ___.\"\n\"Given ___, ___ is impossible because ___.\""];
+        p4 [label="4. COMPARE\n\"Semantic suggests: ___\"\n\"Symbolic derives: ___\"\n\"They [agree/conflict] because: ___\"\n\"Both could be wrong if: ___\""];
+        p5 [label="5. ONE HYPOTHESIS\n\"Based on [semantic/symbolic/conflict], I will test: ___\"\n\"If correct: ___\"\n\"If wrong: ___\""];
+        p6 [label="6. TRACK\n\"Paradigms tried so far: ___\""];
+        p7 [label="7. PARADIGM FIT\n\"Current paradigm: ___\"\n\"Does reasoning fit this paradigm? [yes/no]\"\n\"If no: Switch to ___ and re-enter at selection\""];
+
+        p1 -> p2 -> p3 -> p4 -> p5 -> p6 -> p7;
+    }
+}
 ```
 
 ## Exit Criteria
@@ -76,6 +63,36 @@ Complete ALL prompts before your next attempt. Write the answers, don't just thi
 - [ ] Paradigm switched twice with no progress
 
 After exit: make ONE change, test, return here if still confused.
+
+## Paradigm Switch
+
+When prompt 7 answers "no" (paradigm doesn't fit):
+
+1. **Select new paradigm** using language selection flow
+2. **Re-run** `janus-interop` safety checklist
+3. **Re-enter** at:
+   - TDD: `run_green` (retry with new paradigm)
+   - Debug: `trouble` (retry debug with new paradigm)
+
+**Maximum switches:** 2. After 2nd switch with no progress → escalate to user.
+
+```dot
+digraph paradigm_switch {
+    "Paradigm fits?" [shape=diamond];
+    "Select new paradigm" [shape=box];
+    "Run janus-interop" [shape=box];
+    "Re-enter TDD/Debug" [shape=doublecircle];
+    "Escalate to user" [shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+    "Switches < 2?" [shape=diamond];
+
+    "Paradigm fits?" -> "Continue" [label="yes"];
+    "Paradigm fits?" -> "Switches < 2?" [label="no"];
+    "Switches < 2?" -> "Select new paradigm" [label="yes"];
+    "Switches < 2?" -> "Escalate to user" [label="no"];
+    "Select new paradigm" -> "Run janus-interop";
+    "Run janus-interop" -> "Re-enter TDD/Debug";
+}
+```
 
 ## Hypothesis Quality Gate
 
@@ -172,3 +189,12 @@ If you notice yourself:
 | "I think I see the pattern" | Write it in prompt 2. Then derive in prompt 3. |
 | "This should work" | "Should" without derivation is a guess. |
 | "It's probably X" | Prove it with logic in prompt 3. |
+
+## Handoffs
+
+| Condition | Next | Entry Point |
+|-----------|------|-------------|
+| Paradigm selected, needs interop | `janus-interop` | Pre-Execution Checklist |
+| Exit criteria met (from TDD) | TDD | `run_green` |
+| Exit criteria met (from Debug) | Debug | `trouble` |
+| Max attempts reached | User | Ask for help |

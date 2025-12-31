@@ -18,6 +18,40 @@ When they agree: high confidence. When they conflict: investigate before proceed
 When confused—test surprises you, same error twice, fix doesn't work—stop guessing.
 Use `janus-reasoning` to derive your next action from evidence and logic.
 
+## Language Selection (Before Writing Code)
+
+When starting implementation, select your paradigm:
+
+```dot
+digraph language_selection {
+    "New code?" [shape=diamond];
+    "Extending .pl?" [shape=diamond];
+    "Extending .py?" [shape=diamond];
+    "Need backtracking?" [shape=diamond];
+    "Need ML/data?" [shape=diamond];
+
+    "Use Prolog" [shape=box];
+    "Use Python" [shape=box];
+    "Use Hybrid" [shape=box];
+
+    "New code?" -> "Extending .pl?" [label="yes"];
+    "Extending .pl?" -> "Use Prolog" [label="yes"];
+    "Extending .pl?" -> "Extending .py?" [label="no"];
+    "Extending .py?" -> "Use Python" [label="yes"];
+    "Extending .py?" -> "Need backtracking?" [label="no"];
+    "Need backtracking?" -> "Use Prolog" [label="yes"];
+    "Need backtracking?" -> "Need ML/data?" [label="no"];
+    "Need ML/data?" -> "Use Python" [label="yes"];
+    "Need ML/data?" -> "Use Hybrid" [label="no"];
+
+    "New code?" -> "Use Hybrid" [label="no\n(both needed)"];
+}
+```
+
+**Why Prolog hosts in Hybrid mode:** Prolog's backtracking drives exploration; Python handles data transformation. This matches O'Keefe's guidance on leveraging Prolog's strengths.
+
+After selection → invoke `janus-interop` BEFORE writing any interop code.
+
 ## Self-Check
 
 If you notice yourself:
@@ -97,8 +131,10 @@ These thoughts mean STOP—you're rationalizing:
 | Test result surprises you | `janus-reasoning` | Forced, not optional |
 | Same error twice | `janus-reasoning` | Objective trigger |
 | Debugging any error | `systematic-debugging` | Routes to janus-reasoning |
-| Writing Prolog/Python interop | `janus-interop` | Safety checklist |
+| **About to write** Prolog/Python interop | `janus-interop` | BEFORE writing, not during |
 | Analyzing binaries/decompiled code | `janus-reverse-engineering` | Prolog checks claims |
+| Can't decide between Prolog/Python/Hybrid | `janus-reasoning` | Paradigm confusion trigger |
+| Problem feels like paradigm mismatch | `janus-reasoning` | Paradigm confusion trigger |
 | Brainstorming design | `brainstorming` | |
 | Code complete | `verification-before-completion` | |
 
@@ -124,3 +160,14 @@ The skill itself tells you which.
 ## User Instructions
 
 Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+## Skill Handoffs
+
+| From | To | Trigger | Entry Point |
+|------|-----|---------|-------------|
+| Any | `janus-reasoning` | Confusion triggers (5) | Protocol prompt 1 |
+| `janus-reasoning` | `janus-interop` | After paradigm selection | Pre-Execution Checklist |
+| `janus-reasoning` | TDD | Exit criteria met | `run_green` |
+| `janus-reasoning` | Debug | Exit criteria met | `trouble` |
+| `janus-reverse-engineering` | `janus-interop` | Before ANY Prolog query | Pre-Execution Checklist |
+| `janus-reverse-engineering` | `janus-reasoning` | Unresolvable contradiction | Protocol prompt 1 |

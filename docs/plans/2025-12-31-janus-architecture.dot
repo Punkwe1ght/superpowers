@@ -1,0 +1,214 @@
+// Janus System Architecture
+// Captures the three Janus skills and their integration with the core workflow
+// Based on: 2025-12-31-janus-idiomatic-adherence-design.md
+// Adheres to: ~/.claude/graphviz-conventions.dot
+// Style: Strunk's Elements of Style, O'Keefe's Craft of Prolog naming
+
+digraph janus_architecture {
+    rankdir=TB;
+    node [fontname="Helvetica", fontsize=10, style=filled];
+    edge [fontname="Helvetica", fontsize=9];
+    compound=true;
+    newrank=true;
+    splines=polyline;
+    nodesep=0.4;
+    ranksep=0.5;
+
+    // ===== ENTRY POINT =====
+    subgraph cluster_entry {
+        label="1. Entry";
+        style=filled; fillcolor=white;
+
+        using_superpowers [label="using-superpowers\n(bootstrap)", shape=doublecircle, fillcolor="#c8e6c9"];
+        new_code [label="New code?", shape=diamond, fillcolor=white];
+
+        using_superpowers -> new_code;
+    }
+
+    // ===== LANGUAGE SELECTION =====
+    subgraph cluster_language {
+        label="2. Language Selection";
+        style=filled; fillcolor="#fff9c4";
+
+        extending_file [label="Extending\nfile?", shape=diamond, fillcolor="#fff9c4"];
+        best_fit [label="Best fit?", shape=diamond, fillcolor="#fff9c4"];
+
+        {
+            rank=same;
+            use_prolog [label="Prolog\n(logic)", shape=box, fillcolor="#e8f5e9"];
+            use_python [label="Python\n(data/ML)", shape=box, fillcolor="#e3f2fd"];
+            use_hybrid [label="Hybrid\n(both)", shape=box, fillcolor="#f3e5f5"];
+        }
+
+        extending_file -> use_prolog [label=".pl"];
+        extending_file -> use_python [label=".py"];
+        extending_file -> best_fit [label="new"];
+        best_fit -> use_prolog [label="logic"];
+        best_fit -> use_python [label="ML"];
+        best_fit -> use_hybrid [label="both"];
+    }
+
+    // ===== JANUS-INTEROP SKILL =====
+    subgraph cluster_interop {
+        label="3. janus-interop (Safety)";
+        style=filled; fillcolor="#ffe0b2";
+
+        interop_entry [label="Interop\nrequired", shape=ellipse, fillcolor="#fff3e0"];
+
+        checklist_note [label="Safety Checklist\n----------------\n1. Close queries\n2. Context manager\n3. py_object(true)\n4. py_free/1\n5. Parameterize\n6. Catch exceptions\n7. heartbeat()", shape=note, fillcolor="#fff3e0"];
+
+        pre_check [label="Pre-checklist", shape=box, fillcolor="#fff3e0"];
+        write_interop [label="Write code", shape=box, fillcolor="#fff3e0"];
+        post_verify [label="Post-verify", shape=box, fillcolor="#fff3e0"];
+        violations [label="Violations?", shape=diamond, fillcolor="#fff3e0"];
+        fix_violations [label="Fix first", shape=box, fillcolor="#ffccbc"];
+        interop_done [label="Safe to\nproceed", shape=doublecircle, fillcolor="#c8e6c9"];
+
+        interop_entry -> pre_check;
+        pre_check -> checklist_note [style=dotted, arrowhead=none];
+        pre_check -> write_interop;
+        write_interop -> post_verify;
+        post_verify -> violations;
+        violations -> fix_violations [label="yes"];
+        fix_violations -> post_verify;
+        violations -> interop_done [label="no"];
+    }
+
+    // ===== JANUS-REASONING SKILL =====
+    subgraph cluster_reasoning {
+        label="4. janus-reasoning (Confusion)";
+        style=filled; fillcolor="#e1bee7";
+
+        confusion_entry [label="Confusion\ntrigger", shape=ellipse, fillcolor="#e1bee7"];
+
+        triggers_note [label="Triggers\n--------\n- Unexpected result\n- 2nd failed fix\n- Cannot decide\n- Same error twice\n- Neither prediction", shape=note, fillcolor="#e1bee7"];
+
+        // Protocol steps (vertical flow)
+        expectation [label="1. EXPECT\nvs OBSERVE", shape=box, fillcolor="#ce93d8"];
+        semantic [label="2. SEMANTIC", shape=box, fillcolor="#ce93d8"];
+        symbolic [label="3. SYMBOLIC", shape=box, fillcolor="#ce93d8"];
+        compare [label="4. COMPARE", shape=box, fillcolor="#ce93d8"];
+        one_hypothesis [label="5. ONE\nHYPOTHESIS", shape=box, fillcolor="#ce93d8"];
+        track [label="6. TRACK", shape=box, fillcolor="#ce93d8"];
+        paradigm_fit [label="7. Paradigm\nfits?", shape=diamond, fillcolor="#e1bee7"];
+
+        reasoning_exit [label="Exit\n(derived)", shape=doublecircle, fillcolor="#c8e6c9"];
+        switch_paradigm [label="Switch\nparadigm", shape=box, fillcolor="#f3e5f5"];
+        max_switches [label="< 2\nswitches?", shape=diamond, fillcolor="#e1bee7"];
+        escalate_user [label="Ask user", shape=octagon, fillcolor=red, fontcolor=white];
+
+        confusion_entry -> triggers_note [style=dotted, arrowhead=none];
+        confusion_entry -> expectation;
+        expectation -> semantic;
+        semantic -> symbolic;
+        symbolic -> compare;
+        compare -> one_hypothesis;
+        one_hypothesis -> track;
+        track -> paradigm_fit;
+
+        paradigm_fit -> reasoning_exit [label="yes"];
+        paradigm_fit -> max_switches [label="no"];
+        max_switches -> switch_paradigm [label="yes"];
+        max_switches -> escalate_user [label="no"];
+    }
+
+    // ===== JANUS-REVERSE-ENGINEERING SKILL =====
+    subgraph cluster_re {
+        label="5. janus-reverse-engineering (RE)";
+        style=filled; fillcolor="#b3e5fc";
+
+        re_entry [label="Analyzing\ndecompiled", shape=ellipse, fillcolor="#b3e5fc"];
+
+        recognize [label="1. RECOGNIZE\n(pattern)", shape=box, fillcolor="#81d4fa"];
+        assert_fact [label="2. ASSERT\n(to Prolog)", shape=box, fillcolor="#81d4fa"];
+        check_contradict [label="3. CHECK", shape=box, fillcolor="#81d4fa"];
+        query_contradict [label="?- contradiction(F,W).", shape=plaintext, fontsize=8];
+
+        contradiction [label="Contra-\ndiction?", shape=diamond, fillcolor="#b3e5fc"];
+        resolve_retract [label="4. RESOLVE\nor RETRACT", shape=box, fillcolor="#81d4fa"];
+        unresolvable [label="Resolvable?", shape=diamond, fillcolor="#b3e5fc"];
+        present_user [label="Present\nclaim", shape=doublecircle, fillcolor="#c8e6c9"];
+
+        re_entry -> recognize;
+        recognize -> assert_fact;
+        assert_fact -> check_contradict;
+        check_contradict -> query_contradict;
+        query_contradict -> contradiction;
+        contradiction -> present_user [label="none"];
+        contradiction -> resolve_retract [label="found"];
+        resolve_retract -> unresolvable;
+        unresolvable -> check_contradict [label="yes"];
+    }
+
+    // ===== TDD/DEBUG INTEGRATION =====
+    subgraph cluster_tdd {
+        label="6. TDD / Debug";
+        style=filled; fillcolor="#e0f7fa";
+
+        tdd_entry [label="TDD\ncycle", shape=doublecircle, fillcolor="#b2ebf2"];
+        debug_entry [label="Debug\nflow", shape=ellipse, fillcolor="#ffe0b2"];
+        run_test [label="<TEST>", shape=plaintext, fontsize=8];
+        test_result [label="Expected?", shape=diamond, fillcolor="#e0f7fa"];
+        tdd_continue [label="Continue", shape=box, fillcolor="#c8e6c9"];
+
+        tdd_entry -> run_test;
+        run_test -> test_result;
+        test_result -> tdd_continue [label="yes"];
+    }
+
+    // ===== NEVER RULES =====
+    subgraph cluster_never {
+        label="NEVER";
+        style=filled; fillcolor="#ffcdd2";
+
+        {
+            rank=same;
+            never_skip [label="Skip\nchecklist", shape=octagon, fillcolor=red, fontcolor=white];
+            never_claim [label="Claim\nunchecked", shape=octagon, fillcolor=red, fontcolor=white];
+            never_guess [label="Guess when\nconfused", shape=octagon, fillcolor=red, fontcolor=white];
+        }
+    }
+
+    // ===== CROSS-CLUSTER EDGES =====
+
+    // Entry to Language Selection
+    new_code -> extending_file [label="yes", lhead=cluster_language];
+    new_code -> tdd_entry [label="simple"];
+
+    // Language to Interop (Prolog/Hybrid need safety check)
+    use_prolog -> interop_entry [lhead=cluster_interop];
+    use_hybrid -> interop_entry [lhead=cluster_interop];
+    use_python -> tdd_entry [label="pure"];
+
+    // Interop exits to TDD
+    interop_done -> tdd_entry [style=dashed];
+
+    // TDD/Debug confusion triggers reasoning
+    test_result -> confusion_entry [label="unexpected", lhead=cluster_reasoning, style=dashed];
+    debug_entry -> confusion_entry [label="confused", lhead=cluster_reasoning, style=dashed];
+
+    // Reasoning exits back to TDD/Debug
+    reasoning_exit -> tdd_entry [label="TDD", style=dashed];
+    reasoning_exit -> debug_entry [label="Debug", style=dashed];
+
+    // Paradigm switch goes through interop
+    switch_paradigm -> interop_entry [label="re-check", lhead=cluster_interop, style=dashed];
+
+    // RE requires interop before Prolog queries
+    assert_fact -> interop_entry [label="before\nquery", lhead=cluster_interop, style=dashed];
+
+    // RE unresolvable contradiction escalates to reasoning
+    unresolvable -> confusion_entry [label="no", lhead=cluster_reasoning, style=dashed];
+
+    // =========================================================================
+    // HANDOFF TABLE (from design document)
+    // =========================================================================
+    // | From                       | To                 | Trigger                   |
+    // |----------------------------|--------------------|---------------------------|
+    // | Any                        | janus-reasoning    | Confusion triggers (5)    |
+    // | janus-reasoning            | janus-interop      | After paradigm selection  |
+    // | janus-reasoning            | TDD/Debug          | Exit criteria met         |
+    // | janus-reverse-engineering  | janus-interop      | Before ANY Prolog query   |
+    // | janus-reverse-engineering  | janus-reasoning    | Unresolvable contradiction|
+    // =========================================================================
+}

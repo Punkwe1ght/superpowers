@@ -1,0 +1,9 @@
+[project]
+name = "janus-interop-test"
+version = "0.1.0"
+description = "Tests for janus-interop skill"
+requires-python = ">=3.10"
+dependencies = ["pytest>=7.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["."]

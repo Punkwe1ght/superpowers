@@ -42,10 +42,6 @@ has_input(Func, Input) :-
 
 %% Flexible matching: structural roles satisfy semantic requirements
 
-%% Buffer pattern satisfies buffer requirement
-has_input(Func, buffer) :-
-    arg_flows_to(Func, _, buffer).
-
 %% Struct access satisfies socket for network hypotheses
 has_input(Func, socket) :-
     arg_flows_to(Func, _, struct_access),
@@ -57,12 +53,12 @@ has_input(Func, key) :-
     hypothesis(Func, Purpose, _),
     crypto_purpose(Purpose).
 
-%% Helper: crypto-related purposes
+%% Helper: crypto-related purposes (keyed operations only)
+%% NOTE: Hash functions (hash_md4, hash_md5) are NOT crypto_purpose
+%% because they don't require keys - they're one-way functions.
 crypto_purpose(aes_encrypt).
 crypto_purpose(aes_decrypt).
 crypto_purpose(hmac).
-crypto_purpose(hash_md4).
-crypto_purpose(hash_md5).
 
 %% For hash functions: two unknown params can satisfy input/output
 %% (Hash functions just pass data through, less strict than crypto keys)
@@ -116,9 +112,9 @@ is_hash_function('MD5').
 is_hash_function('SHA1').
 is_hash_function('SHA256').
 
-%% Symmetric incompatibility check (single clause with disjunction)
+%% Symmetric incompatibility check (deterministic with once/1)
 incompatible(A, B) :-
-    ( incompatible_(A, B) ; incompatible_(B, A) ).
+    once(( incompatible_(A, B) ; incompatible_(B, A) )).
 
 incompatible_(encrypt, decrypt).
 incompatible_(malloc, free).

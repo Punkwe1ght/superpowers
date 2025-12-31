@@ -51,6 +51,16 @@ def extract_facts_from_ghidra(ghidra_code: str) -> dict:
     return facts
 
 
+VALID_ROLES = frozenset({"counter", "buffer", "struct_access", "socket", "key", "input", "output", "unknown"})
+
+
+def validate_role(role: str) -> str:
+    """Validate that role is a known semantic role."""
+    if role not in VALID_ROLES:
+        raise ValueError(f"Invalid role '{role}', must be one of: {sorted(VALID_ROLES)}")
+    return role
+
+
 def infer_param_role(param_name: str, code_body: str) -> str:
     """Infer semantic role from parameter usage patterns."""
     # Escape for regex (handle *param_1)
@@ -58,21 +68,21 @@ def infer_param_role(param_name: str, code_body: str) -> str:
 
     # Pattern 1: Counter - *p = *p + 1 or (*p)++
     if re.search(rf'\*{p}\s*=\s*\*{p}\s*\+\s*1', code_body):
-        return "counter"
+        return validate_role("counter")
     if re.search(rf'\(\s*\*{p}\s*\)\s*\+\+', code_body):
-        return "counter"
+        return validate_role("counter")
 
     # Pattern 2: Buffer - base in pointer arithmetic (base + idx * stride)
     if re.search(rf'{p}\s*\+\s*.*\*\s*\d+', code_body):
-        return "buffer"
+        return validate_role("buffer")
     if re.search(rf'\(\s*long\s*\)\s*{p}\s*\*', code_body):
-        return "buffer"
+        return validate_role("buffer")
 
     # Pattern 3: Struct access - param[N] where N is small constant
     if re.search(rf'{p}\s*\[\s*\d\s*\]', code_body):
-        return "struct_access"
+        return validate_role("struct_access")
 
-    return "unknown"
+    return validate_role("unknown")
 
 
 def find_sample_by_name(samples: list, func_name: str) -> dict:

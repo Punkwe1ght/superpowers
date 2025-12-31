@@ -1,0 +1,9 @@
+[project]
+name = "janus-reasoning-test"
+version = "0.1.0"
+description = "Tests for janus-reasoning skill"
+requires-python = ">=3.10"
+dependencies = ["pytest>=7.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["."]

@@ -113,7 +113,7 @@ query_user(Name, Result) :-
     catch(
         py_call(db:lookup(Name), Result, [py_object(true)]),
         Error,
-        (log_error(Error), Result = error(Error))
+        (print_message(error, Error), Result = error(Error))
     ).
 
 % Safe iteration with heartbeat
@@ -188,3 +188,10 @@ AFTER writing interop:
   □ Large objects freed
   □ Long operations have heartbeat
 ```
+
+## Handoffs
+
+| Condition | Next | Entry Point |
+|-----------|------|-------------|
+| Checklist complete | Caller | Resume at code writing |
+| Violation found | Caller | Fix before proceeding |
