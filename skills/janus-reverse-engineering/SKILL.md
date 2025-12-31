@@ -1,6 +1,6 @@
 ---
 name: janus-reverse-engineering
-description: Use during binary/code analysis - Prolog as reasoning backend to catch my own errors
+description: Use when analyzing decompiled code, tracing cross-function data flow, or claiming function purpose or vulnerabilities
 ---
 
 # Janus Reverse Engineering
@@ -36,8 +36,8 @@ I have specific limitations during RE:
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ 2. ASSERT (commit to Prolog knowledge base)                 │
-│    :- assert(hypothesis(0x401000, aes_encrypt, medium)).    │
-│    :- assert(requires(aes_encrypt, [key, iv, plaintext])).  │
+│    ?- assertz(hypothesis(0x401000, aes_encrypt, medium)).   │
+│    ?- assertz(requires(aes_encrypt, [key, plaintext])).     │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -57,21 +57,31 @@ I have specific limitations during RE:
 ### Facts I Assert
 
 ```prolog
+% Declare dynamic predicates
+:- dynamic function/3.
+:- dynamic calls/3.
+:- dynamic returns/2.
+:- dynamic reads/3.
+:- dynamic writes/3.
+:- dynamic arg_flows_to/3.
+:- dynamic hypothesis/3.
+:- dynamic known_pattern/2.
+:- dynamic vuln_hypothesis/3.
+
 % Function basics
-function(Addr, Name, Signature).
-calls(Caller, Callee, Args).
-returns(Func, Type).
+%   function(Addr, Name, Signature)
+%   calls(Caller, Callee, Args)
+%   returns(Func, Type)
 
 % Data flow
-reads(Func, Addr, Size).
-writes(Func, Addr, Size).
-arg_flows_to(Func, ArgN, Dest).
+%   reads(Func, Addr, Size)
+%   writes(Func, Addr, Size)
+%   arg_flows_to(Func, ArgN, SemanticRole)  % SemanticRole: key, plaintext, etc.
 
-% My hypotheses (tagged with confidence)
-hypothesis(Func, Purpose, Confidence).  % Confidence: low/medium/high
-
-% Known patterns I recognized
-known_pattern(Func, PatternName).
+% Hypotheses (Confidence: low/medium/high)
+%   hypothesis(Func, Purpose, Confidence)
+%   known_pattern(Func, PatternName)
+%   vuln_hypothesis(Func, VulnType, Reason)
 ```
 
 ### Constraint Rules
@@ -110,9 +120,13 @@ contradiction(Func, conflicting_hypotheses(H1, H2)) :-
     H1 \= H2,
     incompatible(H1, H2).
 
-incompatible(encrypt, decrypt).
-incompatible(malloc, free).
-incompatible(read_only, writes_memory).
+% Symmetric incompatibility check
+incompatible(A, B) :- incompatible_(A, B).
+incompatible(A, B) :- incompatible_(B, A).
+
+incompatible_(encrypt, decrypt).
+incompatible_(malloc, free).
+incompatible_(read_only, writes_memory).
 ```
 
 ## Pre-Claim Checklist
@@ -151,15 +165,15 @@ My pattern recognition says: "This looks like AES."
 ### Step 2: Assert
 
 ```prolog
-:- assert(function(0x401000, unknown, 'void(void*, void*, void*)')).
-:- assert(hypothesis(0x401000, aes_encrypt, medium)).
-:- assert(known_pattern(0x401000, sbox_lookup)).
-:- assert(known_pattern(0x401000, xor_rounds)).
+?- assertz(function(0x401000, unknown, sig(void, [ptr(void), ptr(void), ptr(void)]))).
+?- assertz(hypothesis(0x401000, aes_encrypt, medium)).
+?- assertz(known_pattern(0x401000, sbox_lookup)).
+?- assertz(known_pattern(0x401000, xor_rounds)).
 
 % What I observed about inputs
-:- assert(arg_flows_to(0x401000, 1, output_buffer)).
-:- assert(arg_flows_to(0x401000, 2, input_buffer)).
-:- assert(arg_flows_to(0x401000, 3, unknown)).  % Third arg unclear
+?- assertz(arg_flows_to(0x401000, 1, output_buffer)).
+?- assertz(arg_flows_to(0x401000, 2, input_buffer)).
+?- assertz(arg_flows_to(0x401000, 3, unknown)).  % Third arg unclear
 ```
 
 ### Step 3: Check
@@ -181,8 +195,8 @@ Options:
 I re-examine the code. Third arg is indeed used in key schedule operations.
 
 ```prolog
-:- retract(arg_flows_to(0x401000, 3, unknown)).
-:- assert(arg_flows_to(0x401000, 3, key)).
+?- retract(arg_flows_to(0x401000, 3, unknown)).
+?- assertz(arg_flows_to(0x401000, 3, key)).
 
 ?- contradiction(0x401000, Why).
 false.  % No contradictions
@@ -203,7 +217,7 @@ Before claiming "this is vulnerable":
 
 ```prolog
 % Assert the vulnerability hypothesis
-:- assert(vuln_hypothesis(Func, buffer_overflow, Reason)).
+?- assertz(vuln_hypothesis(Func, buffer_overflow, Reason)).
 
 % Check if it's actually reachable
 ?- vuln_reachable(Func).
@@ -218,9 +232,27 @@ Before claiming "this is vulnerable":
 **Rules:**
 
 ```prolog
+% --- User-defined predicates (assert these based on analysis) ---
+% user_controlled_input(Source) - Source is attacker-controlled (e.g., argv, recv)
+% data_flows(From, To) - taint propagates from From to To
+% bounds_check_before(Func) - bounds validation precedes vulnerable op
+% size_validation_before(Func) - size check precedes vulnerable op
+
+:- dynamic user_controlled_input/1.
+:- dynamic data_flows/2.
+:- dynamic bounds_check_before/1.
+:- dynamic size_validation_before/1.
+
+% Reachability: attacker input flows to function
 vuln_reachable(Func) :-
     user_controlled_input(Source),
     data_flows(Source, Func).
+
+% Transitive data flow (define base cases via assertz)
+data_flows(A, C) :-
+    data_flows(A, B),
+    data_flows(B, C),
+    A \= C.  % Prevent trivial cycles
 
 vuln_contradicted(Func, bounds_checked) :-
     vuln_hypothesis(Func, buffer_overflow, _),
@@ -238,12 +270,12 @@ mitigation_present(Func, stack_canary) :-
 
 ## Integration
 
-**With janus-interop:** All Prolog queries must follow the safety checklist:
+**REQUIRED:** Use `superpowers:janus-interop` for all Prolog queries:
 - Context manager for queries
 - Exception handling for py_call
 - Parameterized inputs (never string interpolation)
 
-**With janus-reasoning:** When contradiction can't be resolved:
+**ESCALATE:** Use `superpowers:janus-reasoning` when contradiction unresolvable:
 1. Enter janus-reasoning protocol
 2. Complete semantic + symbolic analysis
 3. Derive which hypothesis is wrong
@@ -263,13 +295,13 @@ mitigation_present(Func, stack_canary) :-
 
 ```
 BEFORE claiming function purpose:
-  1. assert(hypothesis(Addr, Purpose, Confidence))
+  1. ?- assertz(hypothesis(Addr, Purpose, Confidence))
   2. ?- contradiction(Addr, Why)
   3. Resolve or retract
   4. Only then present to user
 
 BEFORE claiming vulnerability:
-  1. assert(vuln_hypothesis(Func, Type, Reason))
+  1. ?- assertz(vuln_hypothesis(Func, Type, Reason))
   2. ?- vuln_reachable(Func)
   3. ?- vuln_contradicted(Func, Why)
   4. ?- mitigation_present(Func, What)
