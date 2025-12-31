@@ -1,0 +1,253 @@
+digraph JANUS_ARCHITECTURE {
+    rankdir=TB;
+    node [fontname="Helvetica", fontsize=10, style=filled, fillcolor=white];
+    edge [fontname="Helvetica", fontsize=9];
+    compound=true;
+    newrank=true;
+    splines=polyline;
+    nodesep=0.5;
+    ranksep=0.6;
+
+    // ===== ENTRY POINTS =====
+    subgraph cluster_entry {
+        label="Entry Points";
+        style=filled; fillcolor="#e8f5e9";
+
+        user_msg [label="User message", shape=doublecircle, fillcolor="#c8e6c9"];
+        confusion [label="Confusion\ntrigger", shape=ellipse, fillcolor="#ffccbc"];
+        re_analysis [label="RE analysis\nneeded", shape=ellipse, fillcolor="#b3e5fc"];
+    }
+
+    // ===== CONFUSION TRIGGERS (annotation) =====
+    triggers [label="Confusion Triggers\n----------------\n1. Test result surprises\n2. Same error twice\n3. 2nd failed fix\n4. Can't decide approach\n5. Output matches neither\n   prediction nor negation", shape=note, fillcolor="#fff9c4"];
+
+    // ===== SKILL ROUTING =====
+    subgraph cluster_routing {
+        label="using-superpowers: Skill Routing";
+        style=filled; fillcolor=white;
+
+        skill_applies [label="Skill applies?", shape=diamond];
+        invoke_skill [label="Invoke Skill tool", shape=box];
+        announce [label="Announce skill\nand purpose", shape=box];
+        has_checklist [label="Has checklist?", shape=diamond];
+        create_todos [label="Create todos\nper item", shape=box];
+        follow_skill [label="Follow skill\nexactly", shape=box];
+        respond [label="Respond", shape=doublecircle, fillcolor="#c8e6c9"];
+    }
+
+    // ===== LANGUAGE SELECTION =====
+    subgraph cluster_language {
+        label="Language Selection";
+        style=filled; fillcolor="#fff9c4";
+
+        lang_start [label="Start\nimplementation", shape=doublecircle, fillcolor="#fff9c4"];
+        new_code [label="New code?", shape=diamond];
+        extending_pl [label="Extending\n.pl file?", shape=diamond];
+        extending_py [label="Extending\n.py file?", shape=diamond];
+        need_backtrack [label="Need\nbacktracking?", shape=diamond];
+        need_ml [label="Need\nML/data?", shape=diamond];
+
+        { rank=same;
+            use_prolog [label="Use Prolog\n(logic, constraints)", shape=box, fillcolor="#e8f5e9"];
+            use_python [label="Use Python\n(ML, libraries)", shape=box, fillcolor="#e3f2fd"];
+            use_hybrid [label="Use Hybrid\n(Prolog hosts)", shape=box, fillcolor="#f3e5f5"];
+        }
+    }
+
+    // ===== JANUS-INTEROP: Safety Checklist =====
+    subgraph cluster_safety {
+        label="janus-interop: Safety Protocol";
+        style=filled; fillcolor="#b2dfdb";
+
+        safety_entry [label="Before\ninterop code", shape=doublecircle, fillcolor="#80cbc4"];
+
+        pre_checklist [label="Pre-Execution Checklist\n----------------------\nQuery Lifecycle:\n  [ ] Active queries identified\n  [ ] Context manager for iteration\nObject Lifecycle:\n  [ ] py_object(true) for methods\n  [ ] py_free/1 for large objects\nSafety:\n  [ ] Input parameterized\n  [ ] Exception handling planned\nPerformance:\n  [ ] heartbeat() for long ops", shape=note, fillcolor="#e0f2f1"];
+
+        write_interop [label="Write interop\ncode", shape=box];
+
+        post_verify [label="Post-Execution Verify\n--------------------\n[ ] query(): manager/close\n[ ] py_call: exception handled\n[ ] User input: parameterized\n[ ] Large objects: freed\n[ ] Long ops: heartbeat", shape=note, fillcolor="#e0f2f1"];
+
+        violation [label="Violation?", shape=diamond];
+        fix_violation [label="Fix before\nproceeding", shape=box, fillcolor="#ffccbc"];
+        safety_pass [label="Safety\nverified", shape=doublecircle, fillcolor="#c8e6c9"];
+    }
+
+    // ===== JANUS-REASONING: Bidirectional Protocol =====
+    subgraph cluster_reasoning {
+        label="janus-reasoning: Bidirectional Reasoning";
+        style=filled; fillcolor="#e1bee7";
+
+        reason_entry [label="Enter when\nconfused", shape=doublecircle, fillcolor="#ce93d8"];
+
+        protocol [label="STOP. Complete ALL:\n----------------------\n1. Expected vs Observed\n2. SEMANTIC: reminds me of...\n3. SYMBOLIC: if X then Y...\n4. COMPARE: agree/conflict?\n5. ONE HYPOTHESIS (cite source)\n6. TRACK paradigms tried\n7. PARADIGM FIT: yes/no?", shape=note, fillcolor="#f3e5f5"];
+
+        // Bidirectional reasoning loop
+        analyze_semantic [label="Analyze\nsemantics", shape=box, fillcolor="#e1bee7"];
+        reason_symbolic [label="Reason\nsymbolically", shape=box, fillcolor="#e1bee7"];
+        compare [label="Compare\nresults", shape=box, fillcolor="#e1bee7"];
+        agree [label="Agree?", shape=diamond];
+        investigate [label="Investigate\nmismatch", shape=box, fillcolor="#ffe0b2"];
+
+        hypothesis_quality [label="Derived from\nevidence?", shape=diamond];
+        derived [label="DERIVED\n(cites prompt 2,3,4)", shape=box, fillcolor="#c8e6c9"];
+        guessed [label="GUESSED\n(no evidence)", shape=octagon, fillcolor=red, fontcolor=white];
+
+        paradigm_fits [label="Paradigm\nfits?", shape=diamond];
+        switches_left [label="Switches\n< 2?", shape=diamond];
+        switch_paradigm [label="Switch\nparadigm", shape=box, fillcolor="#fff9c4"];
+        escalate_user [label="Escalate\nto user", shape=octagon, fillcolor=red, fontcolor=white];
+
+        exit_tdd [label="Exit to\nTDD", shape=doublecircle, fillcolor="#c8e6c9"];
+        exit_debug [label="Exit to\nDebug", shape=doublecircle, fillcolor="#ffe0b2"];
+    }
+
+    // ===== JANUS-REVERSE-ENGINEERING =====
+    subgraph cluster_re {
+        label="janus-reverse-engineering: Prolog Validation";
+        style=filled; fillcolor="#b3e5fc";
+
+        re_entry [label="Analyzing\nbinary/decompiled", shape=doublecircle, fillcolor="#81d4fa"];
+
+        re_pattern [label="RE Pattern\n-----------\n1. RECOGNIZE pattern\n2. ASSERT to Prolog KB\n3. CHECK contradiction/2\n4. RESOLVE or RETRACT", shape=note, fillcolor="#e1f5fe"];
+
+        recognize [label="Recognize\npattern", shape=box];
+        infer_params [label="Infer semantic\nparameters", shape=box];
+
+        param_inference [label="Param Inference\n---------------\ncounter: *p = *p + 1\nbuffer: base + idx*stride\nstruct: param[N] access\nunknown: no pattern", shape=note, fillcolor="#e1f5fe"];
+
+        assert_kb [label="Assert hypothesis\nto Prolog KB", shape=box];
+        query_contra [label="?- contradiction(F, Why)", shape=plaintext, fontsize=9];
+        has_contra [label="Contradiction?", shape=diamond];
+
+        resolve [label="Resolve with\nmore analysis", shape=box];
+        retract [label="Retract invalid\nhypothesis", shape=box, fillcolor="#ffccbc"];
+
+        present_claim [label="Present validated\nclaim to user", shape=doublecircle, fillcolor="#c8e6c9"];
+        to_reasoning [label="Unresolvable:\nescalate", shape=box, fillcolor="#e1bee7"];
+    }
+
+    // ===== VULNERABILITY CLAIMS (annotation) =====
+    vuln_check [label="Before Claiming Vuln\n--------------------\n1. assertz(vuln_hypothesis(...))\n2. ?- vuln_reachable(Func)\n3. ?- vuln_contradicted(Func, Why)\n4. ?- mitigation_present(Func, What)\n\nONLY claim if:\n  reachable AND not contradicted", shape=note, fillcolor="#ffcdd2"];
+
+    // ===== SKILL HANDOFFS =====
+    subgraph cluster_handoffs {
+        label="Skill Handoffs";
+        style=filled; fillcolor=white;
+
+        handoff_table [label="Handoff Table\n-------------\nFrom                  To                Trigger              Entry Point\n----                  --                -------              -----------\nAny                   janus-reasoning   5 confusion triggers Protocol prompt 1\njanus-reasoning       janus-interop     Paradigm selected    Pre-Exec Checklist\njanus-reasoning       TDD               Exit criteria met    run_green\njanus-reasoning       Debug             Exit criteria met    trouble\njanus-re              janus-interop     Before Prolog query  Pre-Exec Checklist\njanus-re              janus-reasoning   Contradiction stuck  Protocol prompt 1", shape=box, fillcolor="#f5f5f5"];
+    }
+
+    // ===== NEVER RULES =====
+    subgraph cluster_never {
+        label="NEVER";
+        style=filled; fillcolor="#ffcdd2";
+
+        { rank=same;
+            n1 [label="Guess without\nderivation", shape=octagon, fillcolor=red, fontcolor=white];
+            n2 [label="Multiple changes\nat once", shape=octagon, fillcolor=red, fontcolor=white];
+            n3 [label="Skip symbolic\nreasoning", shape=octagon, fillcolor=red, fontcolor=white];
+            n4 [label="Present\ncontradicted claim", shape=octagon, fillcolor=red, fontcolor=white];
+            n5 [label="String interpolation\nin queries", shape=octagon, fillcolor=red, fontcolor=white];
+        }
+    }
+
+    // ===== EDGES: Entry Flow =====
+    user_msg -> skill_applies;
+    confusion -> reason_entry [style=bold, color="#d32f2f"];
+    re_analysis -> re_entry [style=bold, color="#1976d2"];
+    triggers -> confusion [style=dotted, arrowhead=none];
+
+    // ===== EDGES: Skill Routing =====
+    skill_applies -> invoke_skill [label="yes (even 1%)"];
+    skill_applies -> respond [label="definitely not"];
+    invoke_skill -> announce;
+    announce -> has_checklist;
+    has_checklist -> create_todos [label="yes"];
+    has_checklist -> follow_skill [label="no"];
+    create_todos -> follow_skill;
+    follow_skill -> respond;
+
+    // ===== EDGES: Language Selection =====
+    lang_start -> new_code;
+    new_code -> extending_pl [label="yes"];
+    new_code -> use_hybrid [label="no (both .pl/.py)"];
+    extending_pl -> use_prolog [label="yes"];
+    extending_pl -> extending_py [label="no"];
+    extending_py -> use_python [label="yes"];
+    extending_py -> need_backtrack [label="no"];
+    need_backtrack -> use_prolog [label="yes"];
+    need_backtrack -> need_ml [label="no"];
+    need_ml -> use_python [label="yes"];
+    need_ml -> use_hybrid [label="no"];
+
+    // Language to Safety
+    use_prolog -> safety_entry [ltail=cluster_language];
+    use_python -> safety_entry [ltail=cluster_language];
+    use_hybrid -> safety_entry [ltail=cluster_language];
+
+    // ===== EDGES: Safety Protocol =====
+    safety_entry -> pre_checklist [style=dotted, arrowhead=none];
+    safety_entry -> write_interop;
+    write_interop -> post_verify [style=dotted, arrowhead=none];
+    write_interop -> violation;
+    violation -> fix_violation [label="yes"];
+    violation -> safety_pass [label="no"];
+    fix_violation -> violation;
+
+    // ===== EDGES: Bidirectional Reasoning =====
+    reason_entry -> protocol [style=dotted, arrowhead=none];
+    reason_entry -> analyze_semantic;
+    analyze_semantic -> reason_symbolic;
+    reason_symbolic -> compare;
+    compare -> agree;
+    agree -> hypothesis_quality [label="yes"];
+    agree -> investigate [label="no"];
+    investigate -> analyze_semantic [label="retry"];
+
+    hypothesis_quality -> derived [label="cites evidence"];
+    hypothesis_quality -> guessed [label="no citation"];
+    guessed -> analyze_semantic [label="redo prompt 3"];
+    derived -> paradigm_fits;
+
+    paradigm_fits -> exit_tdd [label="yes\n(from TDD)"];
+    paradigm_fits -> exit_debug [label="yes\n(from Debug)"];
+    paradigm_fits -> switches_left [label="no"];
+    switches_left -> switch_paradigm [label="yes"];
+    switches_left -> escalate_user [label="no"];
+    switch_paradigm -> safety_entry [label="re-run\nchecklist"];
+
+    // ===== EDGES: Reverse Engineering =====
+    re_entry -> re_pattern [style=dotted, arrowhead=none];
+    re_entry -> recognize;
+    recognize -> infer_params;
+    infer_params -> param_inference [style=dotted, arrowhead=none];
+    infer_params -> assert_kb;
+    assert_kb -> query_contra;
+    query_contra -> has_contra;
+    has_contra -> resolve [label="resolvable"];
+    has_contra -> retract [label="unresolvable"];
+    has_contra -> present_claim [label="none"];
+    resolve -> query_contra [label="retry"];
+    retract -> recognize [label="new\nhypothesis"];
+    retract -> to_reasoning [label="2+ switches\nno progress"];
+
+    // RE to Safety (before Prolog queries)
+    assert_kb -> safety_entry [style=dashed, label="before query", constraint=false];
+
+    // RE escalation to Reasoning
+    to_reasoning -> reason_entry [style=bold, color="#7b1fa2"];
+
+    // Vulnerability annotation
+    present_claim -> vuln_check [style=dotted, arrowhead=none];
+
+    // ===== CROSS-CLUSTER: Skill invokes =====
+    follow_skill -> lang_start [label="implementation", style=dashed];
+    follow_skill -> reason_entry [label="confusion", style=dashed, color="#d32f2f"];
+    follow_skill -> re_entry [label="RE analysis", style=dashed, color="#1976d2"];
+    follow_skill -> safety_entry [label="interop code", style=dashed, color="#00796b"];
+
+    // ===== Exit paths back to TDD/Debug =====
+    exit_tdd -> follow_skill [label="run_green", style=dashed, constraint=false];
+    exit_debug -> follow_skill [label="trouble", style=dashed, constraint=false];
+    safety_pass -> follow_skill [label="resume", style=dashed, constraint=false];
+}
