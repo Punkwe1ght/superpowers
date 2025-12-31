@@ -121,6 +121,8 @@ The system enforces: test before code, process over guessing, evidence over clai
 
 ## Janus Skills (Prolog/Python Bidirectional Reasoning)
 
+**Canonical architecture:** See [`docs/janus-architecture.dot`](docs/janus-architecture.dot) and [`docs/janus-architecture.png`](docs/janus-architecture.png) for the complete system diagram.
+
 Three skills use SWI-Prolog's Janus bridge for bidirectional Python-Prolog interop:
 
 | Skill | Purpose |
@@ -129,32 +131,15 @@ Three skills use SWI-Prolog's Janus bridge for bidirectional Python-Prolog inter
 | `janus-interop` | Safety checklist for Janus code (query lifecycle, `py_free`, parameterized input) |
 | `janus-reasoning` | Escape hatch when confused: derive next action from semantic + symbolic reasoning |
 
-### Janus Skill Dependencies
+### Skill Handoffs
 
-```dot
-digraph janus_skills {
-    rankdir=LR;
-    node [shape=box];
-
-    "using-superpowers" [shape=doublecircle, label="using-superpowers\n(bootstrap)"];
-    "janus-reasoning" [label="janus-reasoning\n(bidirectional reasoning)"];
-    "janus-interop" [label="janus-interop\n(safety checklist)"];
-    "janus-reverse-engineering" [label="janus-reverse-engineering\n(RE analysis)"];
-    "TDD" [shape=ellipse];
-    "Debug" [shape=ellipse];
-
-    "using-superpowers" -> "janus-reasoning" [label="confusion triggers"];
-    "using-superpowers" -> "janus-interop" [label="before interop code"];
-    "using-superpowers" -> "janus-reverse-engineering" [label="RE analysis"];
-
-    "janus-reasoning" -> "janus-interop" [label="paradigm selected"];
-    "janus-reasoning" -> "TDD" [label="exit criteria met"];
-    "janus-reasoning" -> "Debug" [label="exit criteria met"];
-
-    "janus-reverse-engineering" -> "janus-interop" [label="before Prolog query"];
-    "janus-reverse-engineering" -> "janus-reasoning" [label="unresolvable contradiction"];
-}
-```
+| From | To | Trigger |
+|------|----|---------|
+| Any | `janus-reasoning` | Confusion triggers (5) |
+| `janus-reasoning` | `janus-interop` | After paradigm selection |
+| `janus-reasoning` | TDD/Debug | Exit criteria met |
+| `janus-reverse-engineering` | `janus-interop` | Before ANY Prolog query |
+| `janus-reverse-engineering` | `janus-reasoning` | Unresolvable contradiction |
 
 **Testing Janus skills:**
 ```bash
