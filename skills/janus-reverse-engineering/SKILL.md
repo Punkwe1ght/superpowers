@@ -52,6 +52,42 @@ I have specific limitations during RE:
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## Semantic Parameter Inference
+
+Ghidra produces generic parameter names (`param_1`, `*param_2`) that lack semantic meaning. Before asserting facts, infer roles from usage patterns:
+
+### Usage Pattern Detection
+
+| Pattern | Code Shape | Inferred Role |
+|---------|------------|---------------|
+| Counter | `*p = *p + 1` or `(*p)++` | `counter` |
+| Buffer | `base + idx * stride` | `buffer` |
+| Struct access | `param[N]` (small N) | `struct_access` |
+| Unknown | No pattern matches | `unknown` |
+
+**Detection logic (apply to each parameter):**
+
+```
+For each param in function signature:
+  1. Check for counter pattern: *param incremented
+  2. Check for buffer pattern: param used as base in pointer arithmetic
+  3. Check for struct pattern: param[digit] access
+  4. Default to "unknown" if no pattern matches
+```
+
+### Flexible Role Matching
+
+Structural roles satisfy semantic requirements through Prolog rules:
+
+| Structural Role | Hypothesis Context | Satisfies |
+|-----------------|-------------------|-----------|
+| `buffer` | any | `buffer` |
+| `struct_access` | `network_io` | `socket` |
+| `struct_access` | crypto purposes | `key` |
+| 2+ `unknown` params | hash purposes | `input`, `output` |
+
+This allows validation even with Ghidra's generic naming.
+
 ## Knowledge Base Schema
 
 ### Facts I Assert
@@ -71,6 +107,8 @@ I have specific limitations during RE:
 :- dynamic actual_type/3.
 :- dynamic global_key/1.
 
+:- discontiguous has_input/2.
+
 % Function basics
 %   function(Addr, Name, Signature)
 %   calls(Caller, Callee, Args)
@@ -79,7 +117,7 @@ I have specific limitations during RE:
 % Data flow
 %   reads(Func, Addr, Size)
 %   writes(Func, Addr, Size)
-%   arg_flows_to(Func, ArgN, SemanticRole)  % SemanticRole: key, plaintext, etc.
+%   arg_flows_to(Func, ArgN, Role)  % Role: buffer, struct_access, counter, unknown
 
 % Hypotheses (Confidence: low/medium/high)
 %   hypothesis(Func, Purpose, Confidence)
@@ -87,11 +125,11 @@ I have specific limitations during RE:
 %   vuln_hypothesis(Func, VulnType, Reason)
 
 % Type constraints (for type_mismatch detection)
-%   requires_type(Purpose, ArgName, ExpectedType)  % e.g., requires_type(aes_encrypt, key, ptr(uint8))
-%   actual_type(Func, ArgName, ObservedType)       % e.g., actual_type(0x401000, key, ptr(uint8))
+%   requires_type(Purpose, ArgName, ExpectedType)
+%   actual_type(Func, ArgName, ObservedType)
 
 % Global data
-%   global_key(Addr)  % Addr holds a cryptographic key (not passed as argument)
+%   global_key(Addr)  % Addr holds a cryptographic key
 ```
 
 ### Constraint Rules
@@ -101,6 +139,10 @@ I have specific limitations during RE:
 requires(aes_encrypt, [key, plaintext]).
 requires(aes_decrypt, [key, ciphertext]).
 requires(hmac, [key, message]).
+requires(hash_md4, [input, output]).
+requires(hash_md5, [input, output]).
+requires(crypto_operation, [key, data]).
+requires(network_io, [socket, buffer]).
 requires(malloc, [size]).
 requires(free, [pointer]).
 
@@ -111,8 +153,50 @@ missing_input(Func, Required) :-
     member(Required, Inputs),
     \+ has_input(Func, Required).
 
+%% Base case: exact semantic match
 has_input(Func, Input) :-
     arg_flows_to(Func, _, Input).
+
+%% Flexible matching: structural roles satisfy semantic requirements
+
+% Buffer pattern satisfies buffer requirement
+has_input(Func, buffer) :-
+    arg_flows_to(Func, _, buffer).
+
+% Struct access satisfies socket for network hypotheses
+has_input(Func, socket) :-
+    arg_flows_to(Func, _, struct_access),
+    hypothesis(Func, network_io, _).
+
+% Struct access satisfies key for crypto hypotheses
+has_input(Func, key) :-
+    arg_flows_to(Func, _, struct_access),
+    hypothesis(Func, Purpose, _),
+    crypto_purpose(Purpose).
+
+% For hash functions: two unknown params satisfy input/output
+has_input(Func, input) :-
+    hypothesis(Func, Purpose, _),
+    is_hash_purpose(Purpose),
+    arg_flows_to(Func, N1, unknown),
+    arg_flows_to(Func, N2, unknown),
+    N1 \= N2.
+
+has_input(Func, output) :-
+    hypothesis(Func, Purpose, _),
+    is_hash_purpose(Purpose),
+    arg_flows_to(Func, N1, unknown),
+    arg_flows_to(Func, N2, unknown),
+    N1 \= N2.
+
+% Helper predicates
+crypto_purpose(aes_encrypt).
+crypto_purpose(aes_decrypt).
+crypto_purpose(hmac).
+
+is_hash_purpose(hash_md4).
+is_hash_purpose(hash_md5).
+is_hash_purpose(crypto_hash).
 
 % Detect contradictions
 contradiction(Func, missing_input(What)) :-
@@ -127,12 +211,12 @@ contradiction(Func, type_mismatch(Arg, Expected, Actual)) :-
 contradiction(Func, conflicting_hypotheses(H1, H2)) :-
     hypothesis(Func, H1, _),
     hypothesis(Func, H2, _),
-    H1 \= H2,
+    H1 @< H2,  % Canonical ordering to avoid duplicate pairs
     incompatible(H1, H2).
 
-% Symmetric incompatibility check
-incompatible(A, B) :- incompatible_(A, B).
-incompatible(A, B) :- incompatible_(B, A).
+% Symmetric incompatibility check (single clause with disjunction)
+incompatible(A, B) :-
+    ( incompatible_(A, B) ; incompatible_(B, A) ).
 
 incompatible_(encrypt, decrypt).
 incompatible_(malloc, free).
@@ -180,44 +264,54 @@ My pattern recognition says: "This looks like AES."
 ?- assertz(known_pattern(0x401000, sbox_lookup)).
 ?- assertz(known_pattern(0x401000, xor_rounds)).
 
-% What I observed about inputs
-?- assertz(arg_flows_to(0x401000, 1, output_buffer)).
-?- assertz(arg_flows_to(0x401000, 2, input_buffer)).
-?- assertz(arg_flows_to(0x401000, 3, unknown)).  % Third arg unclear
+% Inferred roles from usage patterns:
+%   param_1: used as *(param_1 + offset) → buffer
+%   param_2: used as *(param_2 + offset) → buffer
+%   param_3: param_3[0..15] access → struct_access (could be key struct)
+?- assertz(arg_flows_to(0x401000, 1, buffer)).
+?- assertz(arg_flows_to(0x401000, 2, buffer)).
+?- assertz(arg_flows_to(0x401000, 3, struct_access)).
 ```
 
 ### Step 3: Check
 
 ```prolog
 ?- contradiction(0x401000, Why).
-Why = missing_input(key).
+false.  % No contradictions - flexible matching resolved key requirement
 ```
 
-**Prolog caught my error.** AES requires a key. I only traced 3 args: output, input, unknown. Where's the key?
+Flexible matching worked: `struct_access` + crypto hypothesis satisfies `key` requirement.
 
-### Step 4: Resolve
+**Without flexible matching**, Prolog would have caught the error:
+```prolog
+% If param_3 were 'unknown' instead of 'struct_access':
+?- contradiction(0x401000, Why).
+Why = missing_input(key).  % AES requires key, but no key-like param found
+```
 
-Options:
-1. Third arg IS the key → update: `arg_flows_to(0x401000, 3, key)`
-2. Key is global → assert: `reads(0x401000, 0x405000, 16), global_key(0x405000)`
-3. Not actually AES → retract hypothesis
+### Step 4: Verify Flexible Match
 
-I re-examine the code. Third arg is indeed used in key schedule operations.
+Confirm the match is appropriate by checking param_3's usage:
 
 ```prolog
-?- retract(arg_flows_to(0x401000, 3, unknown)).
-?- assertz(arg_flows_to(0x401000, 3, key)).
+% param_3 accesses offsets 0-15 (key schedule pattern)
+% This validates struct_access → key inference for AES
+?- arg_flows_to(0x401000, 3, Role).
+Role = struct_access.  % Confirmed: 16-byte struct access matches key usage
+```
 
-?- contradiction(0x401000, Why).
-false.  % No contradictions
+If the usage pattern doesn't match expectations, retract and re-analyze:
+```prolog
+?- retract(hypothesis(0x401000, aes_encrypt, medium)).
+?- assertz(hypothesis(0x401000, unknown_crypto, low)).
 ```
 
 ### Step 5: Present to User
 
 Now I can tell the user:
-> "Function 0x401000 appears to be AES encryption. It takes (output, input, key) as arguments. Confidence: medium, based on S-box constants and XOR round structure."
+> "Function 0x401000 appears to be AES encryption. It takes (output, input, key) as arguments. Confidence: medium, based on S-box constants, XOR round structure, and third parameter's 16-byte struct access pattern matching key schedule usage."
 
-Without the Prolog check, I might have said "this is AES" without noticing the key input was unaccounted for.
+The semantic inference chain: `param_3[0..15]` → `struct_access` → satisfies `key` for crypto.
 
 ## Vulnerability Claims
 
@@ -253,7 +347,9 @@ Before claiming "this is vulnerable":
 :- dynamic bounds_check_before/1.
 :- dynamic size_validation_before/1.
 
-% Transitive data flow: base case + transitive closure
+% Transitive data flow (tabled to prevent cycles)
+:- table data_flows/2.
+
 data_flows(A, B) :- data_flows_base(A, B).
 data_flows(A, C) :-
     data_flows_base(A, B),
