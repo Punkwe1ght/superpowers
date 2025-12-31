@@ -32,20 +32,20 @@ Complete ALL prompts before your next attempt. Write the answers, don't just thi
 ```dot
 digraph janus_protocol {
     rankdir=TB;
-    node [shape=box, style=rounded];
+    node [shape=note];
 
     subgraph cluster_protocol {
         label="STOP. Complete these before continuing:";
         style=rounded;
         color=black;
 
-        p1 [label="1. EXPECTATION vs REALITY\n\"I expected: ___\"\n\"I observed: ___\""];
-        p2 [label="2. SEMANTIC (patterns)\n\"This reminds me of: ___\"\n\"Similar problem I've seen: ___\""];
-        p3 [label="3. SYMBOLIC (logic + constraints)\n\"What must be true: ___\"\n\"If ___ then ___. I observed ___. Therefore ___.\"\n\"Given ___, ___ is impossible because ___.\""];
-        p4 [label="4. COMPARE\n\"Semantic suggests: ___\"\n\"Symbolic derives: ___\"\n\"They [agree/conflict] because: ___\"\n\"Both could be wrong if: ___\""];
-        p5 [label="5. ONE HYPOTHESIS\n\"Based on [semantic/symbolic/conflict], I will test: ___\"\n\"If correct: ___\"\n\"If wrong: ___\""];
-        p6 [label="6. TRACK\n\"Paradigms tried so far: ___\""];
-        p7 [label="7. PARADIGM FIT\n\"Current paradigm: ___\"\n\"Does reasoning fit this paradigm? [yes/no]\"\n\"If no: Switch to ___ and re-enter at selection\""];
+        p1 [label="1. EXPECTATION vs REALITY\n□ I expected: ___\n□ I observed: ___"];
+        p2 [label="2. SEMANTIC (patterns)\n□ This reminds me of: ___\n□ Similar problem: ___"];
+        p3 [label="3. SYMBOLIC (logic)\n□ What must be true: ___\n□ If ___ then ___. Observed ___. Therefore ___."];
+        p4 [label="4. COMPARE\n□ Semantic suggests: ___\n□ Symbolic derives: ___\n□ They [agree/conflict]: ___"];
+        p5 [label="5. ONE HYPOTHESIS\n□ Based on [semantic/symbolic], test: ___\n□ If correct: ___\n□ If wrong: ___"];
+        p6 [label="6. TRACK\n□ Paradigms tried: ___"];
+        p7 [label="7. PARADIGM FIT\n□ Current paradigm: ___\n□ Fits? [yes/no]\n□ If no: Switch to ___"];
 
         p1 -> p2 -> p3 -> p4 -> p5 -> p6 -> p7;
     }
@@ -58,6 +58,10 @@ digraph janus_protocol {
 - [ ] Semantic and symbolic agree (or conflict is explained)
 - [ ] Hypothesis cites evidence from prompt 2, 3, or 4
 - [ ] Hypothesis has testable predictions (both correct and wrong cases)
+
+**PARADIGM SWITCH when:**
+- [ ] Semantic and symbolic persistently disagree → mismatch signals wrong paradigm
+- [ ] Problem "feels wrong" for current language → trust the feeling, switch paradigm
 
 **ESCALATE when:**
 - [ ] Paradigm switched twice with no progress

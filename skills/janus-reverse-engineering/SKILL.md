@@ -28,28 +28,32 @@ I have specific limitations during RE:
 
 ## The Pattern
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ 1. RECOGNIZE (pattern matching - my strength)               │
-│    "This looks like AES based on constants and structure"   │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 2. ASSERT (commit to Prolog knowledge base)                 │
-│    ?- assertz(hypothesis(0x401000, aes_encrypt, medium)).   │
-│    ?- assertz(requires(aes_encrypt, [key, plaintext])).     │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 3. CHECK (query for contradictions BEFORE telling user)     │
-│    ?- contradiction(0x401000, Why).                         │
-│    Why = missing_input(key).  ← I would have hallucinated   │
-└─────────────────────────────────────────────────────────────┘
-                            ↓
-┌─────────────────────────────────────────────────────────────┐
-│ 4. RESOLVE or RETRACT                                       │
-│    Either find the missing piece, or retract hypothesis     │
-└─────────────────────────────────────────────────────────────┘
+```dot
+digraph re_pattern {
+    rankdir=TB;
+    node [shape=box];
+
+    recognize [label="1. RECOGNIZE\nPattern match: 'This looks like AES'"];
+    assert [label="2. ASSERT\nassert hypothesis to Prolog KB"];
+    check [label="3. CHECK\nQuery contradiction/2 BEFORE claiming"];
+    paradigm_fit [shape=diamond, label="4. Paradigm fits?"];
+    resolve [label="5a. RESOLVE\nFind missing piece"];
+    retract [label="5b. RETRACT\nRemove invalid hypothesis"];
+    present [shape=doublecircle, label="PRESENT\nValidated claim to user"];
+    switch [label="Switch paradigm"];
+    escalate [shape=octagon, label="ESCALATE\nto janus-reasoning"];
+
+    recognize -> assert;
+    assert -> check;
+    check -> paradigm_fit;
+    paradigm_fit -> resolve [label="contradiction\nresolvable"];
+    paradigm_fit -> retract [label="contradiction\nunresolvable"];
+    paradigm_fit -> present [label="no contradiction"];
+    resolve -> check [label="retry"];
+    retract -> switch [label="try different\nhypothesis"];
+    switch -> recognize;
+    retract -> escalate [label="2+ switches\nno progress"];
+}
 ```
 
 ## Semantic Parameter Inference
@@ -147,10 +151,12 @@ requires(malloc, [size]).
 requires(free, [pointer]).
 
 % Detect missing inputs
+% Ground guard: Func and Required are bound before negation
 missing_input(Func, Required) :-
     hypothesis(Func, Purpose, _),
     requires(Purpose, Inputs),
     member(Required, Inputs),
+    ground(Func), ground(Required),  % Guard: ensure grounded before NAF
     \+ has_input(Func, Required).
 
 %% Base case: exact semantic match
@@ -376,12 +382,12 @@ mitigation_present(Func, stack_canary) :-
 
 ## Integration
 
-**REQUIRED:** Use `superpowers:janus-interop` for all Prolog queries:
+**REQUIRED:** Use `janus-interop` BEFORE writing Prolog queries:
 - Context manager for queries
 - Exception handling for py_call
 - Parameterized inputs (never string interpolation)
 
-**ESCALATE:** Use `superpowers:janus-reasoning` when contradiction unresolvable:
+**ESCALATE:** Use `janus-reasoning` when contradiction unresolvable:
 1. Enter janus-reasoning protocol
 2. Complete semantic + symbolic analysis
 3. Derive which hypothesis is wrong

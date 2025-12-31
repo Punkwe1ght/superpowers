@@ -15,8 +15,31 @@ Two lenses on every problem:
 
 When they agree: high confidence. When they conflict: investigate before proceeding.
 
-When confused—test surprises you, same error twice, fix doesn't work—stop guessing.
-Use `janus-reasoning` to derive your next action from evidence and logic.
+### Bidirectional Reasoning Loop
+
+When confused—test surprises you, same error twice, fix doesn't work—apply this loop:
+
+```dot
+digraph bidirectional_reasoning {
+    rankdir=TB;
+
+    confused [shape=doublecircle, label="Confused?"];
+    semantic [shape=box, label="Analyze semantics\n(pattern recognition)"];
+    symbolic [shape=box, label="Reason symbolically\n(logical derivation)"];
+    evaluate [shape=diamond, label="Paradigm fits?"];
+    proceed [shape=doublecircle, label="Proceed with\nhypothesis"];
+    switch_paradigm [shape=box, label="Switch paradigm"];
+
+    confused -> semantic;
+    semantic -> symbolic;
+    symbolic -> evaluate;
+    evaluate -> proceed [label="agree"];
+    evaluate -> switch_paradigm [label="mismatch"];
+    switch_paradigm -> semantic [label="retry"];
+}
+```
+
+Stop guessing. Use `janus-reasoning` to derive your next action from evidence and logic.
 
 ## Language Selection (Before Writing Code)
 
@@ -24,6 +47,7 @@ When starting implementation, select your paradigm:
 
 ```dot
 digraph language_selection {
+    "Start" [shape=doublecircle];
     "New code?" [shape=diamond];
     "Extending .pl?" [shape=diamond];
     "Extending .py?" [shape=diamond];
@@ -34,6 +58,7 @@ digraph language_selection {
     "Use Python" [shape=box];
     "Use Hybrid" [shape=box];
 
+    "Start" -> "New code?";
     "New code?" -> "Extending .pl?" [label="yes"];
     "Extending .pl?" -> "Use Prolog" [label="yes"];
     "Extending .pl?" -> "Extending .py?" [label="no"];

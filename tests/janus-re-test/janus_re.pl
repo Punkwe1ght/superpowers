@@ -1,6 +1,12 @@
 %% janus_re.pl - Janus Reverse Engineering Skill Prolog Implementation
 %% Tests constraint checking against real decompiled code samples
 
+%% Mode declarations (O'Keefe style)
+%% contradiction(+Func, -Reason) is nondet - enumerate contradictions for Func
+%% missing_input(+Func, -Required) is nondet - enumerate missing inputs
+%% has_input(+Func, +Input) is semidet - check if function has required input
+%% incompatible(?A, ?B) is semidet - check if two hypotheses conflict
+
 :- dynamic function/3.
 :- dynamic calls/3.
 :- dynamic returns/2.
@@ -20,6 +26,9 @@
 
 :- discontiguous has_input/2.
 
+%% Table has_input/2 to prevent redundant computation
+:- table has_input/2.
+
 %% What patterns require
 requires(aes_encrypt, [key, plaintext]).
 requires(aes_decrypt, [key, ciphertext]).
@@ -30,10 +39,12 @@ requires(crypto_operation, [key, data]).
 requires(network_io, [socket, buffer]).
 
 %% Detect missing inputs
+%% Ground guard: Func and Required are bound before negation
 missing_input(Func, Required) :-
     hypothesis(Func, Purpose, _),
     requires(Purpose, Inputs),
     member(Required, Inputs),
+    ground(Func), ground(Required),  % Guard: ensure grounded before NAF
     \+ has_input(Func, Required).
 
 %% Base case: exact semantic match
@@ -112,9 +123,11 @@ is_hash_function('MD5').
 is_hash_function('SHA1').
 is_hash_function('SHA256').
 
-%% Symmetric incompatibility check (deterministic with once/1)
-incompatible(A, B) :-
-    once(( incompatible_(A, B) ; incompatible_(B, A) )).
+%% Symmetric incompatibility check (declarative symmetry)
+%% incompatible(?A, ?B) is semidet
+%% Define both directions explicitly for declarative clarity
+incompatible(A, B) :- incompatible_(A, B).
+incompatible(A, B) :- incompatible_(B, A), A @< B.  % Avoid duplicates
 
 incompatible_(encrypt, decrypt).
 incompatible_(malloc, free).

@@ -94,49 +94,56 @@ def find_sample_by_name(samples: list, func_name: str) -> dict:
 
 
 def assert_facts_to_prolog(func_id: str, facts: dict, hypothesis: tuple, code: str):
-    """Load extracted facts into Prolog knowledge base."""
-    # Clear previous facts
-    janus.query_once("clear_facts")
+    """Load extracted facts into Prolog knowledge base.
 
-    # Assert function
-    janus.query_once(
-        "assertz(function(FuncId, Name, sig(void, [])))",
-        {"FuncId": func_id, "Name": facts["function_name"]}
-    )
+    All Prolog queries are wrapped in exception handling per janus-interop safety.
+    """
+    try:
+        # Clear previous facts
+        janus.query_once("clear_facts")
 
-    # Assert parameter flows using pattern inference
-    for i, param in enumerate(facts["params"], 1):
-        role = infer_param_role(param, code)
+        # Assert function
         janus.query_once(
-            "assertz(arg_flows_to(FuncId, ArgN, Role))",
-            {"FuncId": func_id, "ArgN": i, "Role": role}
+            "assertz(function(FuncId, Name, sig(void, [])))",
+            {"FuncId": func_id, "Name": facts["function_name"]}
         )
 
-    # Assert calls
-    for call in facts["calls"]:
+        # Assert parameter flows using pattern inference
+        for i, param in enumerate(facts["params"], 1):
+            role = infer_param_role(param, code)
+            janus.query_once(
+                "assertz(arg_flows_to(FuncId, ArgN, Role))",
+                {"FuncId": func_id, "ArgN": i, "Role": role}
+            )
+
+        # Assert calls
+        for call in facts["calls"]:
+            janus.query_once(
+                "assertz(calls(FuncId, Callee, []))",
+                {"FuncId": func_id, "Callee": call}
+            )
+
+        # Assert hypothesis
+        hyp_purpose, hyp_confidence = hypothesis
         janus.query_once(
-            "assertz(calls(FuncId, Callee, []))",
-            {"FuncId": func_id, "Callee": call}
+            "assertz(hypothesis(FuncId, Purpose, Confidence))",
+            {"FuncId": func_id, "Purpose": hyp_purpose, "Confidence": hyp_confidence}
         )
 
-    # Assert hypothesis
-    hyp_purpose, hyp_confidence = hypothesis
-    janus.query_once(
-        "assertz(hypothesis(FuncId, Purpose, Confidence))",
-        {"FuncId": func_id, "Purpose": hyp_purpose, "Confidence": hyp_confidence}
-    )
-
-    # Assert patterns
-    if facts["has_stack_check"]:
-        janus.query_once(
-            "assertz(known_pattern(FuncId, stack_protection))",
-            {"FuncId": func_id}
-        )
-    if facts["has_null_check"]:
-        janus.query_once(
-            "assertz(known_pattern(FuncId, null_validation))",
-            {"FuncId": func_id}
-        )
+        # Assert patterns
+        if facts["has_stack_check"]:
+            janus.query_once(
+                "assertz(known_pattern(FuncId, stack_protection))",
+                {"FuncId": func_id}
+            )
+        if facts["has_null_check"]:
+            janus.query_once(
+                "assertz(known_pattern(FuncId, null_validation))",
+                {"FuncId": func_id}
+            )
+    except janus.PrologError as e:
+        print(f"  [ERROR] Failed to assert facts: {e}")
+        raise
 
 def check_contradictions(func_id: str) -> list:
     """Query Prolog for contradictions."""

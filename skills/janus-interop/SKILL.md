@@ -108,7 +108,8 @@ Verify in actual code. Line numbers required.
 ### Prolog Side
 
 ```prolog
-% Safe query with cleanup
+%% query_user(+Name, -Result) is det
+%% Safe query with cleanup - always succeeds (Result may be error term)
 query_user(Name, Result) :-
     catch(
         py_call(db:lookup(Name), Result, [py_object(true)]),
@@ -116,14 +117,16 @@ query_user(Name, Result) :-
         (print_message(error, Error), Result = error(Error))
     ).
 
-% Safe iteration with heartbeat
+%% process_all(+Goal) is det
+%% Safe iteration with heartbeat - processes all items, always succeeds
 process_all(Goal) :-
     forall(
         py_iter(generator:items, Item),
         (heartbeat, process_item(Item))
     ).
 
-% Safe large object handling
+%% with_large_object(-Obj, :Goal) is semidet
+%% Safe large object handling - succeeds if Goal succeeds, always frees Obj
 with_large_object(Obj, Goal) :-
     setup_call_cleanup(
         py_call(create_large, Obj),
