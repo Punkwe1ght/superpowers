@@ -1,0 +1,14 @@
+[project]
+name = "game-theory-extractor"
+version = "0.1.0"
+description = "Extract game theory concepts from PDF into Prolog knowledge base"
+requires-python = ">=3.10"
+dependencies = [
+    "pypdf>=4.0.0",
+    "anthropic>=0.40.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
