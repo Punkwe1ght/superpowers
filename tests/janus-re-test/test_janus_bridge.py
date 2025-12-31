@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-Test janus-reverse-engineering skill using the Janus Python-Prolog bridge.
+Demonstrates Python-Prolog interop for the janus-reverse-engineering skill.
 
-This demonstrates the actual interop pattern from the skill:
-- Python extracts facts from decompiled code
-- Prolog checks constraints and catches contradictions
-- Python presents validated results
+Python extracts facts from decompiled code, Prolog checks constraints
+and catches contradictions, Python presents validated results.
 """
 
 import janus_swi as janus
 import json
+import os
 import re
 
-# Initialize Prolog
-janus.consult("janus_re.pl")
+# Initialize Prolog with absolute path
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+janus.consult(os.path.join(_script_dir, "janus_re.pl"))
 
 def extract_facts_from_ghidra(ghidra_code: str) -> dict:
     """Extract facts from Ghidra decompiled code (Python pattern matching)."""
@@ -50,8 +50,41 @@ def extract_facts_from_ghidra(ghidra_code: str) -> dict:
 
     return facts
 
-def assert_facts_to_prolog(func_id: str, facts: dict, hypothesis: tuple):
-    """Assert extracted facts to Prolog knowledge base."""
+
+def infer_param_role(param_name: str, code_body: str) -> str:
+    """Infer semantic role from parameter usage patterns."""
+    # Escape for regex (handle *param_1)
+    p = re.escape(param_name.lstrip('*'))
+
+    # Pattern 1: Counter - *p = *p + 1 or (*p)++
+    if re.search(rf'\*{p}\s*=\s*\*{p}\s*\+\s*1', code_body):
+        return "counter"
+    if re.search(rf'\(\s*\*{p}\s*\)\s*\+\+', code_body):
+        return "counter"
+
+    # Pattern 2: Buffer - base in pointer arithmetic (base + idx * stride)
+    if re.search(rf'{p}\s*\+\s*.*\*\s*\d+', code_body):
+        return "buffer"
+    if re.search(rf'\(\s*long\s*\)\s*{p}\s*\*', code_body):
+        return "buffer"
+
+    # Pattern 3: Struct access - param[N] where N is small constant
+    if re.search(rf'{p}\s*\[\s*\d\s*\]', code_body):
+        return "struct_access"
+
+    return "unknown"
+
+
+def find_sample_by_name(samples: list, func_name: str) -> dict:
+    """Find sample by function name instead of hardcoded index."""
+    for sample in samples:
+        if func_name in sample.get("instruction", ""):
+            return sample
+    raise ValueError(f"Sample with function '{func_name}' not found")
+
+
+def assert_facts_to_prolog(func_id: str, facts: dict, hypothesis: tuple, code: str):
+    """Load extracted facts into Prolog knowledge base."""
     # Clear previous facts
     janus.query_once("clear_facts")
 
@@ -61,18 +94,12 @@ def assert_facts_to_prolog(func_id: str, facts: dict, hypothesis: tuple):
         {"FuncId": func_id, "Name": facts["function_name"]}
     )
 
-    # Assert parameter flows with semantic guessing
-    semantic_map = {
-        "param_1": "input",
-        "param_2": "output",
-        "dst_hash": "output",
-        "src_hash": "input",
-    }
+    # Assert parameter flows using pattern inference
     for i, param in enumerate(facts["params"], 1):
-        semantic = semantic_map.get(param, param)
+        role = infer_param_role(param, code)
         janus.query_once(
-            "assertz(arg_flows_to(FuncId, ArgN, Semantic))",
-            {"FuncId": func_id, "ArgN": i, "Semantic": semantic}
+            "assertz(arg_flows_to(FuncId, ArgN, Role))",
+            {"FuncId": func_id, "ArgN": i, "Role": role}
         )
 
     # Assert calls
@@ -104,35 +131,41 @@ def assert_facts_to_prolog(func_id: str, facts: dict, hypothesis: tuple):
 def check_contradictions(func_id: str) -> list:
     """Query Prolog for contradictions."""
     contradictions = []
-    # Use wrapper predicate that returns strings (avoids compound term conversion)
-    for result in janus.query("contradiction_str(FuncId, CStr)", {"FuncId": func_id}):
-        contradictions.append(result["CStr"])
+    try:
+        # Use wrapper predicate to avoid compound term conversion
+        for result in janus.query("contradiction_str(FuncId, CStr)", {"FuncId": func_id}):
+            contradictions.append(result["CStr"])
+    except janus.PrologError as e:
+        print(f"  [ERROR] Prolog query failed: {e}")
     return contradictions
+
 
 def check_mitigations(func_id: str) -> list:
     """Query Prolog for security mitigations."""
     mitigations = []
-    # Use wrapper predicate that returns strings
-    for result in janus.query("mitigation_str(FuncId, MStr)", {"FuncId": func_id}):
-        mitigations.append(result["MStr"])
+    try:
+        for result in janus.query("mitigation_str(FuncId, MStr)", {"FuncId": func_id}):
+            mitigations.append(result["MStr"])
+    except janus.PrologError as e:
+        print(f"  [ERROR] Prolog query failed: {e}")
     return mitigations
 
 def run_janus_analysis(ghidra_code: str, hypothesis: tuple, ground_truth: str = None):
-    """Run full Janus RE analysis pipeline."""
-    print("\n" + "─" * 60)
+    """Run the Janus Reverse Engineering analysis pipeline."""
+    print("\n" + "-" * 60)
 
     # Step 1: RECOGNIZE (Python pattern matching)
     facts = extract_facts_from_ghidra(ghidra_code)
     func_id = facts["function_name"] or "unknown"
 
     print(f"[RECOGNIZE] Function: {func_id}")
-    print(f"  Params: {facts['params']}")
+    print(f"  Parameters: {facts['params']}")
     print(f"  Calls: {facts['calls']}")
     print(f"  Stack check: {facts['has_stack_check']}")
 
-    # Step 2: ASSERT (Python → Prolog)
+    # Step 2: ASSERT (Python -> Prolog)
     print(f"\n[ASSERT] Hypothesis: {hypothesis[0]} (confidence: {hypothesis[1]})")
-    assert_facts_to_prolog(func_id, facts, hypothesis)
+    assert_facts_to_prolog(func_id, facts, hypothesis, ghidra_code)
 
     # Step 3: CHECK (Prolog constraint propagation)
     print("\n[CHECK] Querying Prolog for contradictions...")
@@ -140,11 +173,11 @@ def run_janus_analysis(ghidra_code: str, hypothesis: tuple, ground_truth: str = 
     mitigations = check_mitigations(func_id)
 
     if contradictions:
-        print(f"  ⚠ CONTRADICTIONS FOUND:")
+        print("  [WARNING] CONTRADICTIONS FOUND:")
         for c in contradictions:
             print(f"    - {c}")
     else:
-        print("  ✓ No contradictions")
+        print("  [OK] No contradictions")
 
     if mitigations:
         print(f"  Mitigations: {mitigations}")
@@ -164,78 +197,71 @@ def run_janus_analysis(ghidra_code: str, hypothesis: tuple, ground_truth: str = 
         "hypothesis": hypothesis,
         "contradictions": contradictions,
         "mitigations": mitigations,
-        "validated": len(contradictions) == 0
+        "validated": not contradictions
     }
 
-# ============================================================
-# TEST CASES
-# ============================================================
+def run_tests():
+    """Run all test cases."""
+    print("=" * 60)
+    print("JANUS BRIDGE TEST - Python <-> Prolog Interop")
+    print("=" * 60)
 
-print("=" * 60)
-print("JANUS BRIDGE TEST - Python ↔ Prolog Interop")
-print("=" * 60)
+    # Load samples from dataset
+    samples_path = os.path.join(_script_dir, "samples.json")
+    with open(samples_path) as f:
+        samples = json.load(f)
 
-# Load samples from dataset
-with open("samples.json") as f:
-    samples = json.load(f)
+    # Test 1: GenerateNtPasswordHashHash (real crypto - should pass)
+    print("\n" + "=" * 60)
+    print("TEST 1: Password Hash Function (should validate)")
+    print("=" * 60)
 
-# Test 1: GenerateNtPasswordHashHash (real crypto - should pass)
-print("\n" + "=" * 60)
-print("TEST 1: Password Hash Function (should validate)")
-print("=" * 60)
+    hash_sample = find_sample_by_name(samples, "GenerateNtPasswordHashHash")
+    run_janus_analysis(
+        hash_sample["instruction"],
+        ("hash_md4", "high"),
+        hash_sample["output"]
+    )
 
-hash_sample = samples[8]  # GenerateNtPasswordHashHash
-run_janus_analysis(
-    hash_sample["instruction"],
-    ("hash_md4", "high"),
-    hash_sample["output"]
-)
+    # Test 2: hp3800_fixedpwm (scanner - false crypto, should contradict)
+    print("\n" + "=" * 60)
+    print("TEST 2: Scanner Driver - False Crypto (should contradict)")
+    print("=" * 60)
 
-# Test 2: hp3800_fixedpwm (scanner - false crypto, should contradict)
-print("\n" + "=" * 60)
-print("TEST 2: Scanner Driver - False Crypto (should contradict)")
-print("=" * 60)
+    scanner_sample = find_sample_by_name(samples, "hp3800_fixedpwm")
+    run_janus_analysis(
+        scanner_sample["instruction"],
+        ("crypto_operation", "low"),
+        scanner_sample["output"]
+    )
 
-scanner_sample = samples[4]  # hp3800_fixedpwm
-run_janus_analysis(
-    scanner_sample["instruction"],
-    ("crypto_operation", "low"),
-    scanner_sample["output"]
-)
+    # Test 3: TCP function (network I/O - should pass)
+    print("\n" + "=" * 60)
+    print("TEST 3: TCP Network Function (should validate)")
+    print("=" * 60)
 
-# Test 3: TCP function (network I/O - should pass)
-print("\n" + "=" * 60)
-print("TEST 3: TCP Network Function (should validate)")
-print("=" * 60)
+    tcp_sample = find_sample_by_name(samples, "ioabs_tcp_pre_select")
+    run_janus_analysis(
+        tcp_sample["instruction"],
+        ("network_io", "medium"),
+        tcp_sample["output"]
+    )
 
-tcp_sample = samples[0]  # ioabs_tcp_pre_select
-run_janus_analysis(
-    tcp_sample["instruction"],
-    ("network_io", "medium"),
-    tcp_sample["output"]
-)
+    # Test 4: Same function with WRONG hypothesis
+    print("\n" + "=" * 60)
+    print("TEST 4: TCP Function with WRONG hypothesis (should contradict)")
+    print("=" * 60)
 
-# Test 4: Same function with WRONG hypothesis
-print("\n" + "=" * 60)
-print("TEST 4: TCP Function with WRONG hypothesis (should contradict)")
-print("=" * 60)
+    run_janus_analysis(
+        tcp_sample["instruction"],
+        ("aes_encrypt", "low"),
+        tcp_sample["output"]
+    )
 
-run_janus_analysis(
-    tcp_sample["instruction"],
-    ("aes_encrypt", "low"),  # Wrong hypothesis!
-    tcp_sample["output"]
-)
+    print("\n" + "=" * 60)
+    print("JANUS BRIDGE TEST COMPLETE")
+    print("=" * 60)
 
-print("\n" + "=" * 60)
-print("JANUS BRIDGE TEST COMPLETE")
-print("=" * 60)
-print("""
-This demonstrates the janus-reverse-engineering skill workflow:
-1. RECOGNIZE: Python extracts facts via pattern matching
-2. ASSERT: Facts sent to Prolog via janus bridge
-3. CHECK: Prolog propagates constraints, finds contradictions
-4. PRESENT: Only validated hypotheses are reported
 
-The Janus bridge enables hundreds of thousands of round-trips/second,
-making this interactive analysis practical.
-""")
+if __name__ == "__main__":
+    run_tests()

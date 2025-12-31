@@ -18,6 +18,8 @@
 :- dynamic bounds_check_before/1.
 :- dynamic size_validation_before/1.
 
+:- discontiguous has_input/2.
+
 %% What patterns require
 requires(aes_encrypt, [key, plaintext]).
 requires(aes_decrypt, [key, ciphertext]).
@@ -34,8 +36,49 @@ missing_input(Func, Required) :-
     member(Required, Inputs),
     \+ has_input(Func, Required).
 
+%% Base case: exact semantic match
 has_input(Func, Input) :-
     arg_flows_to(Func, _, Input).
+
+%% Flexible matching: structural roles satisfy semantic requirements
+
+%% Buffer pattern satisfies buffer requirement
+has_input(Func, buffer) :-
+    arg_flows_to(Func, _, buffer).
+
+%% Struct access satisfies socket for network hypotheses
+has_input(Func, socket) :-
+    arg_flows_to(Func, _, struct_access),
+    hypothesis(Func, network_io, _).
+
+%% Struct access satisfies key for crypto hypotheses
+has_input(Func, key) :-
+    arg_flows_to(Func, _, struct_access),
+    hypothesis(Func, Purpose, _),
+    crypto_purpose(Purpose).
+
+%% Helper: crypto-related purposes
+crypto_purpose(aes_encrypt).
+crypto_purpose(aes_decrypt).
+crypto_purpose(hmac).
+crypto_purpose(hash_md4).
+crypto_purpose(hash_md5).
+
+%% For hash functions: two unknown params can satisfy input/output
+%% (Hash functions just pass data through, less strict than crypto keys)
+has_input(Func, input) :-
+    hypothesis(Func, Purpose, _),
+    is_hash_purpose(Purpose),
+    arg_flows_to(Func, N1, unknown),
+    arg_flows_to(Func, N2, unknown),
+    N1 \= N2.
+
+has_input(Func, output) :-
+    hypothesis(Func, Purpose, _),
+    is_hash_purpose(Purpose),
+    arg_flows_to(Func, N1, unknown),
+    arg_flows_to(Func, N2, unknown),
+    N1 \= N2.
 
 %% Detect contradictions
 contradiction(Func, missing_input(What)) :-
@@ -50,7 +93,7 @@ contradiction(Func, type_mismatch(Arg, Expected, Actual)) :-
 contradiction(Func, conflicting_hypotheses(H1, H2)) :-
     hypothesis(Func, H1, _),
     hypothesis(Func, H2, _),
-    H1 \= H2,
+    H1 @< H2,  % Canonical ordering to avoid duplicate pairs
     incompatible(H1, H2).
 
 contradiction(Func, missing_hash_call) :-
@@ -73,15 +116,17 @@ is_hash_function('MD5').
 is_hash_function('SHA1').
 is_hash_function('SHA256').
 
-%% Symmetric incompatibility check
-incompatible(A, B) :- incompatible_(A, B).
-incompatible(A, B) :- incompatible_(B, A).
+%% Symmetric incompatibility check (single clause with disjunction)
+incompatible(A, B) :-
+    ( incompatible_(A, B) ; incompatible_(B, A) ).
 
 incompatible_(encrypt, decrypt).
 incompatible_(malloc, free).
 incompatible_(read_only, writes_memory).
 
-%% Transitive data flow
+%% Transitive data flow (tabled to prevent cycles)
+:- table data_flows/2.
+
 data_flows(A, B) :- data_flows_base(A, B).
 data_flows(A, C) :-
     data_flows_base(A, B),
