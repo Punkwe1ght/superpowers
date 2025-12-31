@@ -1,0 +1,13 @@
+[project]
+name = "janus-re-test"
+version = "0.1.0"
+description = "Janus reverse engineering skill tests"
+requires-python = ">=3.12"
+dependencies = [
+    "janus-swi>=1.5.2",
+    "pytest>=9.0.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = ["test_*.py"]
