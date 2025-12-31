@@ -146,7 +146,7 @@ Three skills use SWI-Prolog's Janus bridge for bidirectional Python-Prolog inter
 # Run all Janus skill tests
 cd tests/janus-reasoning-test && uv run pytest -v
 cd tests/janus-interop-test && uv run pytest -v
-cd tests/janus-re-test && uv run pytest test_janus_bridge.py -v
+cd tests/janus-re-test && uv run python test_janus_bridge.py
 ```
 
 Requires SWI-Prolog with Janus: `brew install swi-prolog` (macOS) or `apt install swi-prolog` (Linux).
