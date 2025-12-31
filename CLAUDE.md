@@ -13,7 +13,7 @@ Superpowers is a skill-based instruction system for AI coding agents. It's not a
 ```
 superpowers/
 ├── .claude-plugin/       # Plugin metadata (plugin.json, marketplace.json)
-├── skills/               # 14 core workflow skills (each has SKILL.md)
+├── skills/               # 17 workflow skills (each has SKILL.md)
 ├── commands/             # Slash commands (brainstorm, write-plan, execute-plan)
 ├── agents/               # Subagent definitions (code-reviewer.md)
 ├── lib/                  # Skill discovery engine (ES6 JavaScript)
@@ -95,6 +95,9 @@ Then run tests **from the superpowers directory** (skills only load from plugin 
 | `skills/test-driven-development/SKILL.md` | RED-GREEN-REFACTOR enforcement |
 | `skills/subagent-driven-development/SKILL.md` | Two-stage review workflow |
 | `skills/writing-skills/SKILL.md` | How to author new skills |
+| `skills/janus-reverse-engineering/SKILL.md` | Prolog consistency checking for RE claims |
+| `skills/janus-interop/SKILL.md` | Safety checklist for Prolog/Python interop |
+| `skills/janus-reasoning/SKILL.md` | Bidirectional reasoning when confused |
 | `lib/skills-core.js` | Skill discovery and resolution logic |
 | `hooks/session-start.sh` | Plugin initialization |
 | `.claude-plugin/plugin.json` | Version and metadata |
@@ -115,6 +118,24 @@ Follow `skills/writing-skills/SKILL.md` for the complete guide. Key points:
 - **Flexible skills** (brainstorming): Adapt principles to context
 
 The system enforces: test before code, process over guessing, evidence over claims.
+
+## Janus Skills (Prolog/Python Bidirectional Reasoning)
+
+Three skills use SWI-Prolog's Janus bridge for bidirectional Python-Prolog interop:
+
+| Skill | Purpose |
+|-------|---------|
+| `janus-reverse-engineering` | Assert RE hypotheses to Prolog, query for contradictions before claiming function purpose or vulnerabilities |
+| `janus-interop` | Safety checklist for Janus code (query lifecycle, `py_free`, parameterized input) |
+| `janus-reasoning` | Escape hatch when confused: derive next action from semantic + symbolic reasoning |
+
+**Testing Janus skills:**
+```bash
+cd tests/janus-re-test
+uv run pytest test_janus_bridge.py -v
+```
+
+Requires SWI-Prolog with Janus: `brew install swi-prolog` (macOS) or `apt install swi-prolog` (Linux).
 
 ## Python Development
 
