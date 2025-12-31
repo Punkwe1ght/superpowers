@@ -234,25 +234,25 @@ Before claiming "this is vulnerable":
 ```prolog
 % --- User-defined predicates (assert these based on analysis) ---
 % user_controlled_input(Source) - Source is attacker-controlled (e.g., argv, recv)
-% data_flows(From, To) - taint propagates from From to To
+% data_flows_base(From, To) - direct taint edge (assert these)
 % bounds_check_before(Func) - bounds validation precedes vulnerable op
 % size_validation_before(Func) - size check precedes vulnerable op
 
 :- dynamic user_controlled_input/1.
-:- dynamic data_flows/2.
+:- dynamic data_flows_base/2.
 :- dynamic bounds_check_before/1.
 :- dynamic size_validation_before/1.
+
+% Transitive data flow: base case + transitive closure
+data_flows(A, B) :- data_flows_base(A, B).
+data_flows(A, C) :-
+    data_flows_base(A, B),
+    data_flows(B, C).
 
 % Reachability: attacker input flows to function
 vuln_reachable(Func) :-
     user_controlled_input(Source),
     data_flows(Source, Func).
-
-% Transitive data flow (define base cases via assertz)
-data_flows(A, C) :-
-    data_flows(A, B),
-    data_flows(B, C),
-    A \= C.  % Prevent trivial cycles
 
 vuln_contradicted(Func, bounds_checked) :-
     vuln_hypothesis(Func, buffer_overflow, _),
