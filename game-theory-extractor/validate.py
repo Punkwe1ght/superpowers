@@ -3,15 +3,15 @@
 import re
 from typing import Tuple
 
-# Valid predicates we expect from extraction
-VALID_PREDICATES = {"concept", "relates", "example", "formula"}
+# Valid predicates we expect from extraction and schema
+VALID_PREDICATES = {"concept", "relates", "example", "formula", "valid_relation_type"}
 
 # Valid relation types
 VALID_RELATION_TYPES = {"requires", "illustrates", "contrasts", "extends", "contains"}
 
-# Pattern for a Prolog fact: predicate(arg1, arg2, ...).
+# Pattern for a Prolog fact: predicate(arg1, arg2, ...). with optional inline comment
 FACT_PATTERN = re.compile(
-    r'^([a-z_][a-z0-9_]*)\s*\((.*)\)\s*\.\s*$',
+    r'^([a-z_][a-z0-9_]*)\s*\((.*)\)\s*\.\s*(%.*)?$',
     re.IGNORECASE
 )
 
@@ -101,9 +101,9 @@ def validate_fact(line: str) -> Tuple[bool, str]:
     if predicate not in VALID_PREDICATES:
         return False, f"Unknown predicate: {predicate}"
 
-    # Validate the line ends with a period
-    if not line.rstrip().endswith('.'):
-        return False, "Fact must end with period"
+    # Validate the line contains a period (may have inline comment after)
+    if '.' not in line:
+        return False, "Fact must contain period"
 
     return True, ""
 

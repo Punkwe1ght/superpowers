@@ -107,8 +107,14 @@ def call_claude(page_text: str, page_num: int) -> str:
     return message.content[0].text
 
 
-def process_pdf(pdf_path: str, start_page: int | None = None) -> None:
-    """Process PDF and extract concepts to Prolog knowledge base."""
+def process_pdf(pdf_path: str, start_page: int | None = None, max_pages: int | None = None) -> None:
+    """Process PDF and extract concepts to Prolog knowledge base.
+
+    Args:
+        pdf_path: Path to PDF file
+        start_page: Page to start from (1-indexed). If None, resumes from state.
+        max_pages: Maximum pages to process. If None, processes all.
+    """
     if start_page is None:
         start_page = load_state()
         if start_page > 1:
@@ -116,12 +122,18 @@ def process_pdf(pdf_path: str, start_page: int | None = None) -> None:
 
     reader = PdfReader(pdf_path)
     total_pages = len(reader.pages)
+
+    if max_pages:
+        end_page = min(start_page + max_pages - 1, total_pages)
+    else:
+        end_page = total_pages
+
     max_retries = 3
 
-    print(f"Processing {total_pages} pages from {pdf_path}")
+    print(f"Processing pages {start_page}-{end_page} of {total_pages} from {pdf_path}")
     init_knowledge_base()
 
-    for page_num in range(start_page - 1, total_pages):
+    for page_num in range(start_page - 1, end_page):
         current_page = page_num + 1
         print(f"[{current_page}/{total_pages}] Processing page {current_page}...")
 
