@@ -69,6 +69,7 @@ I have specific limitations during RE:
 :- dynamic vuln_hypothesis/3.
 :- dynamic requires_type/3.
 :- dynamic actual_type/3.
+:- dynamic global_key/1.
 
 % Function basics
 %   function(Addr, Name, Signature)
@@ -88,6 +89,9 @@ I have specific limitations during RE:
 % Type constraints (for type_mismatch detection)
 %   requires_type(Purpose, ArgName, ExpectedType)  % e.g., requires_type(aes_encrypt, key, ptr(uint8))
 %   actual_type(Func, ArgName, ObservedType)       % e.g., actual_type(0x401000, key, ptr(uint8))
+
+% Global data
+%   global_key(Addr)  % Addr holds a cryptographic key (not passed as argument)
 ```
 
 ### Constraint Rules
