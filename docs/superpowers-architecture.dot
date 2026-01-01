@@ -84,13 +84,13 @@ digraph SUPERPOWERS_ARCHITECTURE {
         fontsize=14;
         style=filled; fillcolor="#f3e5f5";
 
-        brainstorming [label="Brainstorm\nIdea to design", shape=box, fillcolor="#e1bee7"];
-        writing_plans [label="Write plan\nSpec to steps", shape=box, fillcolor="#e1bee7"];
-        executing_plans [label="Execute plan\nIn batches", shape=box, fillcolor="#e1bee7"];
-        subagent_dev [label="Dispatch subagent\nPer task", shape=box, fillcolor="#e1bee7"];
+        brainstorming [label="Brainstorm idea\ninto design", shape=box, fillcolor="#e1bee7"];
+        writing_plans [label="Write plan\nfrom spec", shape=box, fillcolor="#e1bee7"];
+        executing_plans [label="Execute plan\nin batches", shape=box, fillcolor="#e1bee7"];
+        subagent_dev [label="Dispatch subagent\nper task", shape=box, fillcolor="#e1bee7"];
 
         brainstorming -> writing_plans [label="approved"];
-        writing_plans -> executing_plans [label="parallel"];
+        writing_plans -> executing_plans [label="parallel session"];
         writing_plans -> subagent_dev [label="same session"];
     }
 
@@ -103,9 +103,9 @@ digraph SUPERPOWERS_ARCHITECTURE {
         fontsize=14;
         style=filled; fillcolor="#e0f7fa";
 
-        tdd [label="Follow TDD\nRed-Green-Refactor", shape=box, fillcolor="#b2ebf2"];
-        debug [label="Debug systematically\nFour phases", shape=box, fillcolor="#b2ebf2"];
-        verify [label="Verify with evidence", shape=box, fillcolor="#b2ebf2"];
+        tdd [label="Follow TDD\n(Red-Green-Refactor)", shape=box, fillcolor="#b2ebf2"];
+        debug [label="Debug systematically\n(four phases)", shape=box, fillcolor="#b2ebf2"];
+        verify [label="Verify with evidence\n(before any claim)", shape=box, fillcolor="#b2ebf2"];
 
         tdd -> debug [label="fails", style=dashed];
         debug -> tdd [label="regression", style=dashed];
@@ -138,12 +138,13 @@ digraph SUPERPOWERS_ARCHITECTURE {
         style=filled; fillcolor="#fff8e1";
 
         request_review [label="Request review", shape=box, fillcolor="#ffecb3"];
-        receive_review [label="Receive review\nEvaluate critically", shape=box, fillcolor="#ffecb3"];
-        parallel_agents [label="Dispatch agents\nOne per domain", shape=box, fillcolor="#ffecb3"];
-        code_reviewer [label="Review code", shape=box, fillcolor="#ffe082"];
+        receive_review [label="Evaluate critically\n(verify before implementing)", shape=box, fillcolor="#ffecb3"];
+        parallel_agents [label="Dispatch agents\n(one per domain)", shape=box, fillcolor="#ffecb3"];
+        code_reviewer [label="Review code\n(agents/code-reviewer.md)", shape=box, fillcolor="#ffe082"];
 
         request_review -> receive_review [label="feedback"];
         request_review -> code_reviewer [style=dashed];
+        receive_review -> parallel_agents [label="independent\ntasks"];
     }
 
     // ============================================================
@@ -184,25 +185,31 @@ digraph SUPERPOWERS_ARCHITECTURE {
             switch_paradigm -> escalate [label=">= 2"];
         }
 
-        // Language selection
+        // Language selection (full decision tree from using-superpowers)
         subgraph cluster_lang_select {
             label="Language Selection";
             fontsize=12;
             style=filled; fillcolor="#fffde7";
 
-            new_code [label="New?", shape=diamond];
-            ext_pl [label=".pl?", shape=diamond];
-            need_bt [label="Backtrack?", shape=diamond];
+            new_code [label="New code?", shape=diamond];
+            ext_pl [label="Extending .pl?", shape=diamond];
+            ext_py [label="Extending .py?", shape=diamond];
+            need_bt [label="Backtracking?", shape=diamond];
+            need_ml [label="ML/data?", shape=diamond];
             use_prolog [label="Prolog", shape=box, fillcolor="#c8e6c9"];
             use_python [label="Python", shape=box, fillcolor="#bbdefb"];
-            use_hybrid [label="Hybrid", shape=box, fillcolor="#e1bee7"];
+            use_hybrid [label="Hybrid\n(Prolog hosts)", shape=box, fillcolor="#e1bee7"];
 
             new_code -> ext_pl [label="yes"];
-            new_code -> use_hybrid [label="no"];
+            new_code -> use_hybrid [label="no\n(extending both)"];
             ext_pl -> use_prolog [label="yes"];
-            ext_pl -> need_bt [label="no"];
+            ext_pl -> ext_py [label="no"];
+            ext_py -> use_python [label="yes"];
+            ext_py -> need_bt [label="no"];
             need_bt -> use_prolog [label="yes"];
-            need_bt -> use_python [label="no"];
+            need_bt -> need_ml [label="no"];
+            need_ml -> use_python [label="yes"];
+            need_ml -> use_hybrid [label="no"];
         }
 
         confusion_trigger -> jr_entry;
@@ -262,19 +269,19 @@ digraph SUPERPOWERS_ARCHITECTURE {
     }
 
     // ============================================================
-    // CLUSTER: BENGAL Coverage (Future)
+    // CLUSTER: BENGAL Coverage (IARPA BENGAL domains)
     // ============================================================
     subgraph cluster_bengal {
-        label="BENGAL Coverage\n(D1-D4 Future)";
+        label="BENGAL Coverage\n(D1-D4 domains)";
         labelloc=t;
         fontsize=14;
         style=filled; fillcolor="#eceff1";
 
-        d1_bias [label="D1: Perspectives\n(openevolve)", shape=box, style=dashed, fillcolor="#cfd8dc"];
-        d2_halluc [label="D2: Hallucinations\n(janus-RE)", shape=box, fillcolor="#b0bec5"];
-        d3_flow [label="D3: Info Flow\n(janus-agg)", shape=box, style=dashed, fillcolor="#cfd8dc"];
-        d4_source [label="D4: Source\n(janus-source)", shape=box, style=dashed, fillcolor="#cfd8dc"];
-        shared_kb [label="Shared\nProlog KB", shape=cylinder, fillcolor="#90a4ae"];
+        d1_bias [label="D1: Perspectives\n(tool-openevolve)", shape=box, style=dashed, fillcolor="#cfd8dc"];
+        d2_halluc [label="D2: Hallucinations\n(janus-RE exists)", shape=box, fillcolor="#b0bec5"];
+        d3_flow [label="D3: Info Flow\n(janus-aggregation)", shape=box, style=dashed, fillcolor="#cfd8dc"];
+        d4_source [label="D4: Source Credibility\n(janus-source + Loki/Garak)", shape=box, style=dashed, fillcolor="#cfd8dc"];
+        shared_kb [label="Shared Prolog KB\n(facts, rules,\ncross-domain)", shape=cylinder, fillcolor="#90a4ae"];
 
         d2_halluc -> shared_kb;
         d3_flow -> shared_kb [style=dashed];
@@ -322,9 +329,15 @@ digraph SUPERPOWERS_ARCHITECTURE {
     // Implementation Skills -> Review
     tdd -> request_review [lhead=cluster_review, label="review", style=dashed, color="#ff9800"];
 
+    // Verification -> Janus (when confused)
+    verify -> confusion_trigger [label="unexpected\nresult", color="#d32f2f", penwidth=2];
+
     // Implementation Skills -> Janus (CRITICAL HANDOFFS)
     tdd -> confusion_trigger [label="test surprise", color="#d32f2f", penwidth=2.5];
     debug -> confusion_trigger [label="same error 2x", color="#d32f2f", penwidth=2.5];
+
+    // Git Workflow -> Janus (baseline fails confusingly)
+    worktrees -> confusion_trigger [label="baseline\nfails", style=dashed, color="#d32f2f"];
 
     // Janus Reasoning -> Janus Interop
     use_prolog -> ji_entry [lhead=cluster_janus_interop, label="before code", color="#00796b", penwidth=2];
@@ -332,8 +345,8 @@ digraph SUPERPOWERS_ARCHITECTURE {
     use_hybrid -> ji_entry [lhead=cluster_janus_interop, color="#00796b", penwidth=2];
 
     // Janus Reasoning -> TDD/Debug (exit)
-    jr_exit -> tdd [label="resume", style=dashed, color="#4caf50"];
-    jr_exit -> debug [label="resume", style=dashed, color="#4caf50"];
+    jr_exit -> tdd [label="resume TDD", style=dashed, color="#4caf50"];
+    jr_exit -> debug [label="resume debug", style=dashed, color="#4caf50"];
 
     // Janus RE -> Janus Interop
     assert_kb -> ji_entry [lhead=cluster_janus_interop, label="before query", color="#00796b", style=dashed];
@@ -341,6 +354,13 @@ digraph SUPERPOWERS_ARCHITECTURE {
     // Janus RE -> Janus Reasoning (stuck)
     retract_hyp -> jr_entry [label="stuck", color="#7b1fa2", penwidth=2];
 
+    // Review -> Janus (when feedback confusing)
+    receive_review -> confusion_trigger [label="can't verify", style=dashed, color="#d32f2f"];
+
     // BENGAL -> Janus RE
     d2_halluc -> re_entry [label="implements", style=solid, color="#607d8b"];
+
+    // BENGAL orchestration (future)
+    jr_exit -> d3_flow [label="output check", style=dashed, color="#607d8b"];
+    jr_exit -> d4_source [label="source check", style=dashed, color="#607d8b"];
 }
