@@ -77,6 +77,7 @@ IF suggestion seems wrong:
   Push back with technical reasoning
 
 IF can't easily verify:
+  Enter `janus-reasoning` for bidirectional analysis, OR
   Say so: "I can't verify this without [X]. Should I [investigate/ask/proceed]?"
 
 IF conflicts with your human partner's prior decisions:
@@ -203,6 +204,11 @@ You understand 1,2,3,6. Unclear on 4,5.
 ## GitHub Thread Replies
 
 When replying to inline review comments on GitHub, reply in the comment thread (`gh api repos/{owner}/{repo}/pulls/{pr}/comments/{id}/replies`), not as a top-level PR comment.
+
+## Integration
+
+**Hands off to:**
+- **janus-reasoning** - When feedback seems wrong but can't easily verify
 
 ## The Bottom Line
 

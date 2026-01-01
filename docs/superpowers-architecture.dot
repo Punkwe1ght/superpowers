@@ -1,0 +1,346 @@
+digraph SUPERPOWERS_ARCHITECTURE {
+    // Layout and global styling
+    rankdir=TB;
+    compound=true;
+    splines=true;
+    node [fontname="Helvetica", fontsize=12, style=filled, fillcolor=white];
+    edge [fontname="Helvetica", fontsize=10];
+    nodesep=0.7;
+    ranksep=1.2;
+    newrank=true;
+
+    // ============================================================
+    // CLUSTER: Plugin Lifecycle
+    // ============================================================
+    subgraph cluster_lifecycle {
+        label="Plugin Lifecycle";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#e8f5e9";
+
+        session_event [label="Session Event\n(startup|resume|clear)", shape=doublecircle, fillcolor="#c8e6c9"];
+        hooks_json [label="hooks.json\nmatcher config", shape=note, fillcolor="#e8f5e9"];
+        session_start_sh [label="Execute hook\nRead SKILL.md", shape=box];
+        inject_context [label="Inject skill\nusing-superpowers", shape=box];
+        agent_ready [label="Agent Ready", shape=doublecircle, fillcolor="#c8e6c9"];
+
+        session_event -> hooks_json [style=dotted, arrowhead=none];
+        session_event -> session_start_sh;
+        session_start_sh -> inject_context;
+        inject_context -> agent_ready;
+    }
+
+    // ============================================================
+    // CLUSTER: Skill Discovery Engine (lib/)
+    // ============================================================
+    subgraph cluster_discovery {
+        label="Skill Discovery\n(lib/skills-core.js)";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#e3f2fd";
+
+        skill_request [label="Skill Request", shape=ellipse];
+        resolve_skill [label="resolveSkillPath()", shape=box];
+        check_personal [label="Personal\nskills?", shape=diamond];
+        check_superpowers [label="Superpowers\nskills?", shape=diamond];
+        return_content [label="Return SKILL.md", shape=box];
+        skill_not_found [label="Not Found", shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+
+        skill_request -> resolve_skill;
+        resolve_skill -> check_personal;
+        check_personal -> return_content [label="shadows"];
+        check_personal -> check_superpowers [label="no"];
+        check_superpowers -> return_content [label="yes"];
+        check_superpowers -> skill_not_found [label="no"];
+    }
+
+    // ============================================================
+    // CLUSTER: Skill Router (using-superpowers)
+    // ============================================================
+    subgraph cluster_router {
+        label="Skill Router\n(using-superpowers)";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#fff3e0";
+
+        user_msg [label="User Message", shape=doublecircle, fillcolor="#ffcc80"];
+        skill_applies [label="Skill\napplies?", shape=diamond];
+        invoke_skill [label="Invoke Skill tool", shape=box];
+        follow_skill [label="Follow skill\nexactly", shape=box];
+        respond_direct [label="Respond", shape=doublecircle, fillcolor="#ffcc80"];
+
+        user_msg -> skill_applies;
+        skill_applies -> invoke_skill [label="even 1%"];
+        skill_applies -> respond_direct [label="no"];
+        invoke_skill -> follow_skill;
+    }
+
+    // ============================================================
+    // CLUSTER: Process Skills (Workflow)
+    // ============================================================
+    subgraph cluster_process_skills {
+        label="Process Skills";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#f3e5f5";
+
+        brainstorming [label="Brainstorm\nIdea to design", shape=box, fillcolor="#e1bee7"];
+        writing_plans [label="Write plan\nSpec to steps", shape=box, fillcolor="#e1bee7"];
+        executing_plans [label="Execute plan\nIn batches", shape=box, fillcolor="#e1bee7"];
+        subagent_dev [label="Dispatch subagent\nPer task", shape=box, fillcolor="#e1bee7"];
+
+        brainstorming -> writing_plans [label="approved"];
+        writing_plans -> executing_plans [label="parallel"];
+        writing_plans -> subagent_dev [label="same session"];
+    }
+
+    // ============================================================
+    // CLUSTER: Implementation Skills (Discipline)
+    // ============================================================
+    subgraph cluster_impl_skills {
+        label="Implementation Skills";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#e0f7fa";
+
+        tdd [label="Follow TDD\nRed-Green-Refactor", shape=box, fillcolor="#b2ebf2"];
+        debug [label="Debug systematically\nFour phases", shape=box, fillcolor="#b2ebf2"];
+        verify [label="Verify with evidence", shape=box, fillcolor="#b2ebf2"];
+
+        tdd -> debug [label="fails", style=dashed];
+        debug -> tdd [label="regression", style=dashed];
+        tdd -> verify [label="done?"];
+        debug -> verify [label="fixed?"];
+    }
+
+    // ============================================================
+    // CLUSTER: Git Workflow Skills
+    // ============================================================
+    subgraph cluster_git_skills {
+        label="Git Workflow";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#fce4ec";
+
+        worktrees [label="Create worktree\nIsolated workspace", shape=box, fillcolor="#f8bbd9"];
+        finishing [label="Finish branch\nMerge or PR", shape=box, fillcolor="#f8bbd9"];
+
+        worktrees -> finishing [label="complete"];
+    }
+
+    // ============================================================
+    // CLUSTER: Review & Subagents
+    // ============================================================
+    subgraph cluster_review {
+        label="Review & Subagents";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#fff8e1";
+
+        request_review [label="Request review", shape=box, fillcolor="#ffecb3"];
+        receive_review [label="Receive review\nEvaluate critically", shape=box, fillcolor="#ffecb3"];
+        parallel_agents [label="Dispatch agents\nOne per domain", shape=box, fillcolor="#ffecb3"];
+        code_reviewer [label="Review code", shape=box, fillcolor="#ffe082"];
+
+        request_review -> receive_review [label="feedback"];
+        request_review -> code_reviewer [style=dashed];
+    }
+
+    // ============================================================
+    // CLUSTER: Janus Paradigm (Bidirectional Reasoning)
+    // ============================================================
+    subgraph cluster_janus {
+        label="Janus Paradigm\n(Bidirectional Reasoning)";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#fff9c4";
+
+        // Entry triggers
+        confusion_trigger [label="Confusion\nTrigger", shape=ellipse, fillcolor="#fff59d"];
+
+        // janus-reasoning core
+        subgraph cluster_janus_reasoning {
+            label="janus-reasoning";
+            fontsize=12;
+            style=filled; fillcolor="#fffde7";
+
+            jr_entry [label="Enter\nprotocol", shape=doublecircle, fillcolor="#ffee58"];
+            semantic [label="Analyze semantics\n(patterns)", shape=box];
+            symbolic [label="Derive symbolically\n(logic)", shape=box];
+            compare [label="Agree?", shape=diamond];
+            paradigm_fit [label="Fits?", shape=diamond];
+            jr_exit [label="Exit", shape=doublecircle, fillcolor="#c8e6c9"];
+            switch_paradigm [label="Switch\nparadigm", shape=box];
+            escalate [label="Escalate", shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+
+            jr_entry -> semantic;
+            semantic -> symbolic;
+            symbolic -> compare;
+            compare -> paradigm_fit [label="yes"];
+            compare -> semantic [label="investigate"];
+            paradigm_fit -> jr_exit [label="yes"];
+            paradigm_fit -> switch_paradigm [label="no"];
+            switch_paradigm -> jr_entry [label="< 2"];
+            switch_paradigm -> escalate [label=">= 2"];
+        }
+
+        // Language selection
+        subgraph cluster_lang_select {
+            label="Language Selection";
+            fontsize=12;
+            style=filled; fillcolor="#fffde7";
+
+            new_code [label="New?", shape=diamond];
+            ext_pl [label=".pl?", shape=diamond];
+            need_bt [label="Backtrack?", shape=diamond];
+            use_prolog [label="Prolog", shape=box, fillcolor="#c8e6c9"];
+            use_python [label="Python", shape=box, fillcolor="#bbdefb"];
+            use_hybrid [label="Hybrid", shape=box, fillcolor="#e1bee7"];
+
+            new_code -> ext_pl [label="yes"];
+            new_code -> use_hybrid [label="no"];
+            ext_pl -> use_prolog [label="yes"];
+            ext_pl -> need_bt [label="no"];
+            need_bt -> use_prolog [label="yes"];
+            need_bt -> use_python [label="no"];
+        }
+
+        confusion_trigger -> jr_entry;
+    }
+
+    // ============================================================
+    // CLUSTER: Janus Interop (Safety)
+    // ============================================================
+    subgraph cluster_janus_interop {
+        label="janus-interop\n(Safety Protocol)";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#b2dfdb";
+
+        ji_entry [label="Safety\nChecklist", shape=doublecircle, fillcolor="#80cbc4"];
+        pre_check [label="Pre-exec\nQueries, objects,\nparameterize", shape=note, fillcolor="#e0f2f1"];
+        write_interop [label="Write Code", shape=box];
+        violation [label="Violation?", shape=diamond];
+        fix_violation [label="Fix", shape=box, fillcolor="#ffccbc"];
+        safe [label="Safe", shape=doublecircle, fillcolor="#c8e6c9"];
+
+        ji_entry -> pre_check [style=dotted, arrowhead=none];
+        ji_entry -> write_interop;
+        write_interop -> violation;
+        violation -> fix_violation [label="yes"];
+        violation -> safe [label="no"];
+        fix_violation -> violation;
+    }
+
+    // ============================================================
+    // CLUSTER: Janus Reverse Engineering
+    // ============================================================
+    subgraph cluster_janus_re {
+        label="janus-reverse-engineering\n(D2: Hallucination Check)";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#e1f5fe";
+
+        re_entry [label="Analyze", shape=doublecircle, fillcolor="#81d4fa"];
+        recognize [label="1. Recognize\npattern", shape=box];
+        assert_kb [label="2. Assert\nto KB", shape=box];
+        query_contra [label="?- contradiction(F, Why)", shape=plaintext];
+        contra_found [label="Contra?", shape=diamond];
+        resolve_contra [label="4a. Resolve", shape=box];
+        retract_hyp [label="4b. Retract", shape=box, fillcolor="#ffccbc"];
+        present_claim [label="5. Present", shape=doublecircle, fillcolor="#c8e6c9"];
+
+        re_entry -> recognize;
+        recognize -> assert_kb;
+        assert_kb -> query_contra;
+        query_contra -> contra_found;
+        contra_found -> present_claim [label="none"];
+        contra_found -> resolve_contra [label="resolve"];
+        contra_found -> retract_hyp [label="unresolvable"];
+        resolve_contra -> query_contra;
+        retract_hyp -> recognize [label="retry"];
+    }
+
+    // ============================================================
+    // CLUSTER: BENGAL Coverage (Future)
+    // ============================================================
+    subgraph cluster_bengal {
+        label="BENGAL Coverage\n(D1-D4 Future)";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#eceff1";
+
+        d1_bias [label="D1: Perspectives\n(openevolve)", shape=box, style=dashed, fillcolor="#cfd8dc"];
+        d2_halluc [label="D2: Hallucinations\n(janus-RE)", shape=box, fillcolor="#b0bec5"];
+        d3_flow [label="D3: Info Flow\n(janus-agg)", shape=box, style=dashed, fillcolor="#cfd8dc"];
+        d4_source [label="D4: Source\n(janus-source)", shape=box, style=dashed, fillcolor="#cfd8dc"];
+        shared_kb [label="Shared\nProlog KB", shape=cylinder, fillcolor="#90a4ae"];
+
+        d2_halluc -> shared_kb;
+        d3_flow -> shared_kb [style=dashed];
+        d4_source -> shared_kb [style=dashed];
+        d1_bias -> shared_kb [style=dashed];
+    }
+
+    // ============================================================
+    // CLUSTER: Never Rules (Guardrails)
+    // ============================================================
+    subgraph cluster_never {
+        label="NEVER Rules";
+        labelloc=t;
+        fontsize=14;
+        style=filled; fillcolor="#ffcdd2";
+
+        never_guess [label="NEVER guess", shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        never_multi [label="NEVER multi-change", shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        never_skip [label="NEVER skip symbolic", shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        never_claim [label="NEVER claim\nif contradicted", shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        never_code [label="NEVER code\nbefore test", shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+        never_git [label="NEVER git add -A", shape=octagon, style=filled, fillcolor=red, fontcolor=white];
+    }
+
+    // ============================================================
+    // INTER-CLUSTER EDGES: Skill Handoffs
+    // ============================================================
+
+    // Lifecycle -> Router
+    agent_ready -> user_msg [lhead=cluster_router, style=dashed, color="#666666"];
+
+    // Router -> Skill Discovery
+    invoke_skill -> skill_request [lhead=cluster_discovery, color="#666666"];
+    return_content -> follow_skill [ltail=cluster_discovery, color="#666666"];
+
+    // Process Skills -> Implementation Skills
+    subagent_dev -> tdd [lhead=cluster_impl_skills, label="uses TDD", style=dashed, color="#9c27b0"];
+    executing_plans -> tdd [lhead=cluster_impl_skills, label="follows", style=dashed, color="#9c27b0"];
+
+    // Process Skills -> Git Workflow
+    brainstorming -> worktrees [lhead=cluster_git_skills, label="setup", style=dashed, color="#e91e63"];
+    subagent_dev -> finishing [label="done", style=dashed, color="#e91e63"];
+    executing_plans -> finishing [label="done", style=dashed, color="#e91e63"];
+
+    // Implementation Skills -> Review
+    tdd -> request_review [lhead=cluster_review, label="review", style=dashed, color="#ff9800"];
+
+    // Implementation Skills -> Janus (CRITICAL HANDOFFS)
+    tdd -> confusion_trigger [label="test surprise", color="#d32f2f", penwidth=2.5];
+    debug -> confusion_trigger [label="same error 2x", color="#d32f2f", penwidth=2.5];
+
+    // Janus Reasoning -> Janus Interop
+    use_prolog -> ji_entry [lhead=cluster_janus_interop, label="before code", color="#00796b", penwidth=2];
+    use_python -> ji_entry [lhead=cluster_janus_interop, color="#00796b", penwidth=2];
+    use_hybrid -> ji_entry [lhead=cluster_janus_interop, color="#00796b", penwidth=2];
+
+    // Janus Reasoning -> TDD/Debug (exit)
+    jr_exit -> tdd [label="resume", style=dashed, color="#4caf50"];
+    jr_exit -> debug [label="resume", style=dashed, color="#4caf50"];
+
+    // Janus RE -> Janus Interop
+    assert_kb -> ji_entry [lhead=cluster_janus_interop, label="before query", color="#00796b", style=dashed];
+
+    // Janus RE -> Janus Reasoning (stuck)
+    retract_hyp -> jr_entry [label="stuck", color="#7b1fa2", penwidth=2];
+
+    // BENGAL -> Janus RE
+    d2_halluc -> re_entry [label="implements", style=solid, color="#607d8b"];
+}

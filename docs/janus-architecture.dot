@@ -120,10 +120,10 @@ digraph JANUS_ARCHITECTURE {
         style=filled; fillcolor="#ffcdd2";
         rank=same;
 
-        never1 [label="Guess", shape=octagon, fillcolor=red, fontcolor=white];
-        never2 [label="Multi-change", shape=octagon, fillcolor=red, fontcolor=white];
-        never3 [label="Skip symbolic", shape=octagon, fillcolor=red, fontcolor=white];
-        never4 [label="Claim if\ncontradicted", shape=octagon, fillcolor=red, fontcolor=white];
+        never1 [label="NEVER guess", shape=octagon, fillcolor=red, fontcolor=white];
+        never2 [label="NEVER multi-change", shape=octagon, fillcolor=red, fontcolor=white];
+        never3 [label="NEVER skip symbolic", shape=octagon, fillcolor=red, fontcolor=white];
+        never4 [label="NEVER claim\nif contradicted", shape=octagon, fillcolor=red, fontcolor=white];
     }
 
     // ===== EDGES: Main Flow =====

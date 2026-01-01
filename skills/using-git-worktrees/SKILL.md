@@ -129,7 +129,10 @@ uv run pytest
 go test ./...
 ```
 
-**If tests fail:** Report failures, ask whether to proceed or investigate.
+**If tests fail:**
+- Report failures clearly
+- If failure cause is unclear or confusing → enter `janus-reasoning` (mandatory for confusion)
+- Ask whether to proceed or investigate
 
 **If tests pass:** Report ready.
 
@@ -211,6 +214,9 @@ Ready to implement auth feature
 **Called by:**
 - **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
 - Any skill needing isolated workspace
+
+**Hands off to:**
+- **janus-reasoning** - When test failures are confusing or don't make sense
 
 **Pairs with:**
 - **finishing-a-development-branch** - REQUIRED for cleanup after work complete

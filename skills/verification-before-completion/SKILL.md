@@ -130,6 +130,24 @@ From 24 failure memories:
 - Implications of success
 - ANY communication suggesting completion/correctness
 
+## When Verification Fails Unexpectedly
+
+If verification fails and you don't understand why:
+1. Do NOT claim completion
+2. Do NOT guess at the cause
+3. Enter `janus-reasoning` (mandatory for confusion)
+4. Apply bidirectional analysis before next attempt
+
+**Confusion triggers:**
+- Test passes when you expected failure
+- Test fails but error message makes no sense
+- Same verification failed twice with different fixes
+
+## Integration
+
+**Hands off to:**
+- **janus-reasoning** - When verification results are confusing or contradictory
+
 ## The Bottom Line
 
 **No shortcuts for verification.**
