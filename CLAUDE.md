@@ -8,6 +8,8 @@ Superpowers is a skill-based instruction system for AI coding agents. It's not a
 
 **Key insight:** This is a Claude Code plugin, not a library. There's no compilation, no package manager dependencies to install - just markdown skills and JavaScript for skill discovery.
 
+**Operational workflow:** See [`docs/superpowers-operational.dot`](docs/superpowers-operational.dot) - simplified decision flowchart for coding sessions (CRITICAL PATH → ESCAPE HATCH → NEVER rules).
+
 ## Architecture
 
 ```
