@@ -1,0 +1,42 @@
+[
+  {
+    "instruction": "void ioabs_tcp_pre_select(int *param_1,int *param_2,long param_3)\n\n{\n  *param_1 = *param_2;\n  *param_2 = *param_2 + 1;\n  *(int *)((long)*param_1 * 8 + param_3 + 4) = param_1[4];\n  *(uint *)(param_3 + (long)*param_1 * 8) = *(uint *)(param_3 + (long)*param_1 * 8) | 1;\n  if (((**(int **)(param_1 + 2) + *(int *)(*(long *)(param_1 + 2) + 4)) -\n      *(int *)(*(long *)(param_1 + 2) + 8)) % *(int *)(*(long *)(param_1 + 2) + 4) != 0) {\n    *(uint *)(param_3 + (long)*param_1 * 8) = *(uint *)(param_3 + (long)*param_1 * 8) | 4;\n  }\n  return;\n}",
+    "output": "void ioabs_tcp_pre_select(connection c, int *n, struct pollfd *pfds) {\n    struct ioabs_tcp *io;\n    io = (struct ioabs_tcp*)c->io;\n\n    c->s_index = *n;\n    (*n)++;\n\n    pfds[c->s_index].fd = c->s;\n    pfds[c->s_index].events |= 0x0001;\n    if (((size_t)(((c->wrb)->put + (c->wrb)->len - (c->wrb)->get) % (c->wrb)->len)) > 0)\n       pfds[c->s_index].events |= 0x0004;\n}"
+  },
+  {
+    "instruction": "ulong ioabs_tcp_pre_select(int *param_1,int *param_2,long param_3)\n\n{\n  uint *puVar1;\n  int iVar2;\n  int *piVar3;\n  int iVar4;\n  ulong uVar5;\n  \n  iVar2 = *param_2;\n  *param_1 = iVar2;\n  *param_2 = iVar2 + 1;\n  *(int *)(param_3 + 4 + (long)*param_1 * 8) = param_1[4];\n  puVar1 = (uint *)(param_3 + (long)*param_1 * 8);\n  *puVar1 = *puVar1 | 1;\n  piVar3 = *(int **)(param_1 + 2);\n  iVar2 = piVar3[1];\n  iVar4 = (iVar2 + *piVar3) - piVar3[2];\n  uVar5 = (long)iVar4 / (long)iVar2 & 0xffffffff;\n  if (iVar4 % iVar2 != 0) {\n    uVar5 = (ulong)*param_1;\n    puVar1 = (uint *)(param_3 + uVar5 * 8);\n    *puVar1 = *puVar1 | 4;\n  }\n  return uVar5;\n}",
+    "output": "void ioabs_tcp_pre_select(connection c, int *n, struct pollfd *pfds) {\n    struct ioabs_tcp *io;\n    io = (struct ioabs_tcp*)c->io;\n\n    c->s_index = *n;\n    (*n)++;\n\n    pfds[c->s_index].fd = c->s;\n    pfds[c->s_index].events |= 0x0001;\n    if (((size_t)(((c->wrb)->put + (c->wrb)->len - (c->wrb)->get) % (c->wrb)->len)) > 0)\n       pfds[c->s_index].events |= 0x0004;\n}"
+  },
+  {
+    "instruction": "ulong ioabs_tcp_pre_select(int *param_1,int *param_2,long param_3)\n\n{\n  uint *puVar1;\n  int iVar2;\n  int *piVar3;\n  int iVar4;\n  uint uVar5;\n  \n  iVar2 = *param_2;\n  *param_1 = iVar2;\n  *param_2 = iVar2 + 1;\n  puVar1 = (uint *)(param_3 + (long)*param_1 * 8);\n  piVar3 = *(int **)(param_1 + 2);\n  iVar2 = piVar3[1];\n  puVar1[1] = param_1[4];\n  iVar4 = (*piVar3 + iVar2) - piVar3[2];\n  uVar5 = *puVar1 | 5;\n  if (iVar4 % iVar2 == 0) {\n    uVar5 = *puVar1 | 1;\n  }\n  *puVar1 = uVar5;\n  return (long)iVar4 / (long)iVar2 & 0xffffffff;\n}",
+    "output": "void ioabs_tcp_pre_select(connection c, int *n, struct pollfd *pfds) {\n    struct ioabs_tcp *io;\n    io = (struct ioabs_tcp*)c->io;\n\n    c->s_index = *n;\n    (*n)++;\n\n    pfds[c->s_index].fd = c->s;\n    pfds[c->s_index].events |= 0x0001;\n    if (((size_t)(((c->wrb)->put + (c->wrb)->len - (c->wrb)->get) % (c->wrb)->len)) > 0)\n       pfds[c->s_index].events |= 0x0004;\n}"
+  },
+  {
+    "instruction": "ulong ioabs_tcp_pre_select(int *param_1,int *param_2,long param_3)\n\n{\n  uint *puVar1;\n  int iVar2;\n  int *piVar3;\n  int iVar4;\n  uint uVar5;\n  \n  iVar2 = *param_2;\n  *param_1 = iVar2;\n  *param_2 = iVar2 + 1;\n  puVar1 = (uint *)(param_3 + (long)*param_1 * 8);\n  piVar3 = *(int **)(param_1 + 2);\n  iVar2 = piVar3[1];\n  puVar1[1] = param_1[4];\n  iVar4 = (*piVar3 + iVar2) - piVar3[2];\n  uVar5 = *puVar1 | 5;\n  if (iVar4 % iVar2 == 0) {\n    uVar5 = *puVar1 | 1;\n  }\n  *puVar1 = uVar5;\n  return (long)iVar4 / (long)iVar2 & 0xffffffff;\n}",
+    "output": "void ioabs_tcp_pre_select(connection c, int *n, struct pollfd *pfds) {\n    struct ioabs_tcp *io;\n    io = (struct ioabs_tcp*)c->io;\n\n    c->s_index = *n;\n    (*n)++;\n\n    pfds[c->s_index].fd = c->s;\n    pfds[c->s_index].events |= 0x0001;\n    if (((size_t)(((c->wrb)->put + (c->wrb)->len - (c->wrb)->get) % (c->wrb)->len)) > 0)\n       pfds[c->s_index].events |= 0x0004;\n}"
+  },
+  {
+    "instruction": "undefined4 hp3800_fixedpwm(int param_1,int param_2)\n\n{\n  long in_FS_OFFSET;\n  int local_4c;\n  int local_40;\n  undefined4 local_3c;\n  undefined8 local_38;\n  undefined8 local_30;\n  undefined8 local_28;\n  undefined8 local_20;\n  long local_10;\n  \n  local_10 = *(long *)(in_FS_OFFSET + 0x28);\n  local_30 = 0;\n  local_28 = 0;\n  local_20 = 0;\n  local_38 = 1;\n  local_3c = 0x16;\n  local_40 = 0;\n  do {\n    if (1 < local_40) {\nLAB_001000aa:\n      if (*(long *)(in_FS_OFFSET + 0x28) != *(long *)(in_FS_OFFSET + 0x28)) {\n                    /* WARNING: Subroutine does not return */\n        __stack_chk_fail();\n      }\n      return local_3c;\n    }\n    if (param_2 == *(int *)(&local_38 + (long)local_40 * 2)) {\n      if ((param_1 < 1) || (local_4c = param_1, 3 < param_1)) {\n        local_4c = 1;\n      }\n      local_3c = *(undefined4 *)\n                  ((long)&local_38 + ((long)(local_4c + -1) + (long)local_40 * 4) * 4 + 4);\n      goto LAB_001000aa;\n    }\n    local_40 = local_40 + 1;\n  } while( true );\n}",
+    "output": "SANE_Int\nhp3800_fixedpwm(SANE_Int scantype, SANE_Int usb)\n{\n struct st_reg\n {\n  SANE_Int usb;\n  SANE_Int pwm[3];\n };\n\n struct st_reg reg[] = {\n\n  {0x01, {0, 0, 0}},\n  {0x00, {0, 0, 0}}\n };\n\n SANE_Int a, rst = 0x16;\n\n for (a = 0; a < 2; a++) {\n  if (reg[a].usb == usb) {\n   if ((scantype < 0x01) || (scantype > 0x03))\n    scantype = 0x01;\n\n   rst = reg[a].pwm[scantype - 1];\n   break;\n  }\n }\n\n return rst;\n}"
+  },
+  {
+    "instruction": "undefined8 hp3800_fixedpwm(undefined8 param_1,int param_2)\n\n{\n  undefined8 uVar1;\n  long in_FS_OFFSET;\n  \n  if (param_2 == 1) {\n    uVar1 = 0;\n  }\n  else {\n    uVar1 = 0x16;\n    if (param_2 == 0) {\n      uVar1 = 0;\n    }\n  }\n  if (*(long *)(in_FS_OFFSET + 0x28) == *(long *)(in_FS_OFFSET + 0x28)) {\n    return uVar1;\n  }\n                    /* WARNING: Subroutine does not return */\n  __stack_chk_fail();\n}",
+    "output": "SANE_Int\nhp3800_fixedpwm(SANE_Int scantype, SANE_Int usb)\n{\n struct st_reg\n {\n  SANE_Int usb;\n  SANE_Int pwm[3];\n };\n\n struct st_reg reg[] = {\n\n  {0x01, {0, 0, 0}},\n  {0x00, {0, 0, 0}}\n };\n\n SANE_Int a, rst = 0x16;\n\n for (a = 0; a < 2; a++) {\n  if (reg[a].usb == usb) {\n   if ((scantype < 0x01) || (scantype > 0x03))\n    scantype = 0x01;\n\n   rst = reg[a].pwm[scantype - 1];\n   break;\n  }\n }\n\n return rst;\n}"
+  },
+  {
+    "instruction": "byte hp3800_fixedpwm(undefined8 param_1,uint param_2)\n\n{\n  return ~-(param_2 < 2) & 0x16;\n}",
+    "output": "SANE_Int\nhp3800_fixedpwm(SANE_Int scantype, SANE_Int usb)\n{\n struct st_reg\n {\n  SANE_Int usb;\n  SANE_Int pwm[3];\n };\n\n struct st_reg reg[] = {\n\n  {0x01, {0, 0, 0}},\n  {0x00, {0, 0, 0}}\n };\n\n SANE_Int a, rst = 0x16;\n\n for (a = 0; a < 2; a++) {\n  if (reg[a].usb == usb) {\n   if ((scantype < 0x01) || (scantype > 0x03))\n    scantype = 0x01;\n\n   rst = reg[a].pwm[scantype - 1];\n   break;\n  }\n }\n\n return rst;\n}"
+  },
+  {
+    "instruction": "byte hp3800_fixedpwm(undefined8 param_1,uint param_2)\n\n{\n  return ~-(param_2 < 2) & 0x16;\n}",
+    "output": "SANE_Int\nhp3800_fixedpwm(SANE_Int scantype, SANE_Int usb)\n{\n struct st_reg\n {\n  SANE_Int usb;\n  SANE_Int pwm[3];\n };\n\n struct st_reg reg[] = {\n\n  {0x01, {0, 0, 0}},\n  {0x00, {0, 0, 0}}\n };\n\n SANE_Int a, rst = 0x16;\n\n for (a = 0; a < 2; a++) {\n  if (reg[a].usb == usb) {\n   if ((scantype < 0x01) || (scantype > 0x03))\n    scantype = 0x01;\n\n   rst = reg[a].pwm[scantype - 1];\n   break;\n  }\n }\n\n return rst;\n}"
+  },
+  {
+    "instruction": "void GenerateNtPasswordHashHash(long param_1,long param_2)\n\n{\n  if ((param_1 != 0) && (param_2 != 0)) {\n    HashMd4(param_1,param_2,0x10);\n  }\n  return;\n}",
+    "output": "void GenerateNtPasswordHashHash(UCHAR *dst_hash, UCHAR *src_hash)\n{\n\t// Validate arguments\n\tif (dst_hash == NULL || src_hash == NULL)\n\t{\n\t\treturn;\n\t}\n\n\tHashMd4(dst_hash, src_hash, 16);\n}"
+  },
+  {
+    "instruction": "void GenerateNtPasswordHashHash(long param_1,long param_2)\n\n{\n  if ((param_1 != 0) && (param_2 != 0)) {\n    HashMd4(param_1,param_2,0x10);\n    return;\n  }\n  return;\n}",
+    "output": "void GenerateNtPasswordHashHash(UCHAR *dst_hash, UCHAR *src_hash)\n{\n\t// Validate arguments\n\tif (dst_hash == NULL || src_hash == NULL)\n\t{\n\t\treturn;\n\t}\n\n\tHashMd4(dst_hash, src_hash, 16);\n}"
+  }
+]

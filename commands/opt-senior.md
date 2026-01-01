@@ -1,0 +1,1 @@
+Please dispatch a senior superpowers:code-reviewer subagent to conduct a thorough and pragmatic optimization based on user input. Robustly ENFORCE JANUS SYSTEM IDIOMATICITY and @/Users/jameson/.claude/graphviz-conventions.dot AND Strunk's Elements of Style AND O'Keefe's The Craft of Prolog during any task fulfillment.
