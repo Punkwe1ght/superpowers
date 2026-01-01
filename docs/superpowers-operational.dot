@@ -1,0 +1,104 @@
+digraph OPERATIONAL {
+    // Optimized for Claude's decision-making, not documentation
+    rankdir=TB;
+    node [fontname="Helvetica", fontsize=14, style=filled, fillcolor=white];
+    edge [fontname="Helvetica", fontsize=11];
+    splines=true;
+    nodesep=0.5;
+    ranksep=0.8;
+
+    // =============================================================
+    // CRITICAL PATH - Follow this by default
+    // =============================================================
+    subgraph cluster_critical {
+        label="CRITICAL PATH";
+        labelloc=t;
+        fontsize=16;
+        fontcolor="#1b5e20";
+        style=filled; fillcolor="#e8f5e9";
+        penwidth=3;
+        color="#4caf50";
+
+        start [label="User message", shape=doublecircle, fillcolor="#c8e6c9"];
+
+        skill_check [label="Skill applies?\n(even 1%)", shape=diamond, fillcolor="#fff9c4"];
+
+        invoke [label="Invoke skill\nFollow exactly", shape=box];
+
+        tdd [label="TDD\nRed → Green → Refactor", shape=box, fillcolor="#bbdefb"];
+
+        verify [label="Verify\nRun command, read output\nTHEN claim result", shape=box, fillcolor="#b2dfdb"];
+
+        done [label="Done", shape=doublecircle, fillcolor="#c8e6c9"];
+
+        start -> skill_check;
+        skill_check -> invoke [label="yes"];
+        skill_check -> tdd [label="no skill\n(implement)"];
+        invoke -> tdd [label="implementation"];
+        invoke -> done [label="info only"];
+        tdd -> verify;
+        verify -> done [label="passes"];
+    }
+
+    // =============================================================
+    // ESCAPE HATCH - When stuck or confused
+    // =============================================================
+    subgraph cluster_escape {
+        label="ESCAPE HATCH (when stuck)";
+        labelloc=t;
+        fontsize=16;
+        fontcolor="#b71c1c";
+        style=filled; fillcolor="#ffebee";
+        penwidth=3;
+        color="#f44336";
+
+        confused [label="CONFUSED?\n• Test surprise\n• Same error 2x\n• Fix didn't work\n• Can't decide approach", shape=diamond, fillcolor="#ffcdd2"];
+
+        janus [label="janus-reasoning\n1. State what you expected\n2. Analyze semantics (patterns)\n3. Derive symbolically (logic)\n4. Compare: agree?\n5. Derive next action", shape=box, fillcolor="#fff9c4"];
+
+        derived [label="Action derived?", shape=diamond, fillcolor="#fff9c4"];
+
+        resume [label="Resume\nTDD/Debug", shape=box, fillcolor="#c8e6c9"];
+
+        escalate [label="STOP\nAsk for help\n(after 3 attempts)", shape=octagon, fillcolor=red, fontcolor=white];
+
+        confused -> janus;
+        janus -> derived;
+        derived -> resume [label="yes"];
+        derived -> janus [label="no\n(switch paradigm)"];
+        derived -> escalate [label="3x failed"];
+    }
+
+    // =============================================================
+    // NEVER - Hard stops (check constantly)
+    // =============================================================
+    subgraph cluster_never {
+        label="NEVER (hard stops)";
+        labelloc=t;
+        fontsize=16;
+        fontcolor=white;
+        style=filled; fillcolor="#b71c1c";
+        penwidth=3;
+        color="#b71c1c";
+
+        never1 [label="NEVER guess\nDerive from evidence", shape=octagon, fillcolor=red, fontcolor=white];
+        never2 [label="NEVER multi-change\nOne hypothesis at a time", shape=octagon, fillcolor=red, fontcolor=white];
+        never3 [label="NEVER skip symbolic\nLogic before action", shape=octagon, fillcolor=red, fontcolor=white];
+        never4 [label="NEVER claim unverified\nRun command first", shape=octagon, fillcolor=red, fontcolor=white];
+        never5 [label="NEVER code before test\nRed before green", shape=octagon, fillcolor=red, fontcolor=white];
+        never6 [label="NEVER git add -A\nAdd specific files", shape=octagon, fillcolor=red, fontcolor=white];
+    }
+
+    // =============================================================
+    // EDGES - Confusion triggers from critical path
+    // =============================================================
+
+    // When verification fails unexpectedly
+    verify -> confused [label="unexpected\nfailure", color="#d32f2f", penwidth=2, style=dashed];
+
+    // When TDD hits confusion
+    tdd -> confused [label="test\nsurprise", color="#d32f2f", penwidth=2, style=dashed];
+
+    // Return to critical path after reasoning
+    resume -> tdd [color="#4caf50", penwidth=2, style=dashed];
+}
