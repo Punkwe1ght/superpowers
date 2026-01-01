@@ -14,6 +14,8 @@ Next up, once you say "go", it launches a *subagent-driven-development* process,
 
 There's a bunch more to it, but that's the core of the system. And because the skills trigger automatically, you don't need to do anything special. Your coding agent just has Superpowers.
 
+**Architecture:** See [`docs/superpowers-operational.dot`](docs/superpowers-operational.dot) for the simplified decision flowchart.
+
 
 ## Sponsorship
 
@@ -55,6 +57,8 @@ Check that commands appear:
 # /superpowers:brainstorm - Interactive design refinement
 # /superpowers:write-plan - Create implementation plan
 # /superpowers:execute-plan - Execute plan in batches
+# /superpowers:opt-senior - Senior code review
+# /superpowers:pg-style - Competing reviewers for style issues
 ```
 
 ### Codex
@@ -116,6 +120,11 @@ Fetch and follow instructions from https://raw.githubusercontent.com/obra/superp
 - **using-git-worktrees** - Parallel development branches
 - **finishing-a-development-branch** - Merge/PR decision workflow
 - **subagent-driven-development** - Fast iteration with two-stage review (spec compliance, then code quality)
+
+**Janus (Bidirectional Reasoning)**
+- **janus-reasoning** - Escape hatch when confused: derive next action from semantic + symbolic reasoning
+- **janus-interop** - Safety checklist for Prolog/Python interop code
+- **janus-reverse-engineering** - Assert RE hypotheses to Prolog, query for contradictions before claiming
 
 **Meta**
 - **writing-skills** - Create new skills following best practices (includes testing methodology)
