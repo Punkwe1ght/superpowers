@@ -16,7 +16,7 @@ Superpowers is a skill-based instruction system for AI coding agents. It's not a
 superpowers/
 ├── .claude-plugin/       # Plugin metadata (plugin.json, marketplace.json)
 ├── skills/               # 17 workflow skills (each has SKILL.md)
-├── commands/             # Slash commands (brainstorm, write-plan, execute-plan)
+├── commands/             # Slash commands (brainstorm, write-plan, execute-plan, opt-senior, pg-style)
 ├── agents/               # Subagent definitions (code-reviewer.md)
 ├── lib/                  # Skill discovery engine (ES6 JavaScript)
 │   └── skills-core.js    # Frontmatter extraction, skill resolution, shadowing
