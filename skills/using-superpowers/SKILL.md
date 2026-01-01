@@ -3,6 +3,8 @@ name: using-superpowers
 description: Use when starting any conversation - establishes Janus reasoning paradigm and skill invocation
 ---
 
+**Quick reference:** See [`docs/superpowers-operational.dot`](docs/superpowers-operational.dot) for the simplified decision flowchart (CRITICAL PATH → ESCAPE HATCH → NEVER rules).
+
 ## How You Reason
 
 Two lenses on every problem:
